@@ -183,11 +183,37 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 main{padding:26px 48px 20px}
 h1{font-size:2rem}
 footer.foot{margin:0;padding:12px 24px 36px;font-size:.85rem;color:var(--mut);text-align:center}
+
+.helpBtn{position:absolute;left:28px;top:28px;min-height:40px;padding:0 16px;border-radius:999px;font-size:.95rem;font-weight:400}
+.how{grid-column:1/-1;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:24px 28px}
+.how h2{margin:0 0 4px;font-size:1.35rem}.how .lead{margin:0;color:var(--mut)}
+.hsteps{list-style:none;counter-reset:st;margin:20px 0 16px;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 22px}
+.hsteps li{counter-increment:st;position:relative;padding-top:46px;font-size:1rem;line-height:1.45}
+.hsteps li::before{content:counter(st);position:absolute;top:0;left:0;width:34px;height:34px;border-radius:50%;background:var(--ac);color:var(--onac);font-weight:700;display:grid;place-items:center}
+.hsteps b{display:block;margin-bottom:4px;font-size:1.08rem}
+.hnote{margin:0 0 16px;color:var(--mut);font-size:.95rem;max-width:900px}
+#tabG #setupBanner{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:0}
+#setupBanner.hide{display:none!important}
+.wiz{position:fixed;inset:0;z-index:60;background:rgba(8,11,28,.62);display:grid;place-items:center;padding:20px}
+.wizCard{width:100%;max-width:780px;max-height:calc(100vh - 40px);overflow:auto;background:var(--card);color:var(--tx);border-radius:22px;padding:30px 34px;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+.wizHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wizStep{color:var(--mut);font-size:.95rem}
+.wizDots{display:flex;gap:6px}.wizDots i{width:34px;height:6px;border-radius:3px;background:var(--ring)}.wizDots i.on{background:var(--ac)}
+.wizCard h2{font-size:1.7rem;line-height:1.2;margin:14px 0 4px}
+.wizCard h3{font-size:1.2rem;margin:18px 0 4px}
+.wizCard .lead{margin:0 0 18px;color:var(--mut)}
+.wf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}
+.wf label{font-size:1rem;color:var(--tx);margin-bottom:6px}
+.wizFoot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:26px}
+.wizFoot .r{display:flex;gap:10px}
+.linkBtn{border:0;background:transparent;min-height:40px;color:var(--mut);text-decoration:underline;font-weight:400;padding:0 8px}
+.wizFoot .go{background:var(--ac);color:var(--onac);border-color:var(--ac)}
 </style>
 </head>
 <body>
 <div class="app">
 <header class="top">
+  <button type="button" id="helpBtn" class="helpBtn">Come funziona</button>
   <div class="brandRow"><svg width="54" height="54" viewBox="0 0 96 96" fill="none" role="img" aria-label="Logo TimbraOre: un timbro che lascia l'impronta di un quadrante"><rect x="27" y="4" width="42" height="12" rx="6" fill="var(--tx)"/><rect x="43.5" y="12" width="9" height="23" rx="2" fill="var(--tx)"/><rect x="17" y="33" width="62" height="13" rx="6.5" fill="var(--ac)"/><circle cx="48" cy="71" r="18" stroke="var(--ac)" stroke-width="5.2"/><path d="M48 71V59.5M48 71L56.5 76" stroke="var(--vou)" stroke-width="5" stroke-linecap="round"/></svg><span class="wm">Timbra<i>Ore</i></span></div>
   <p class="tagline">Orari, banca ore, ferie e permessi per chi lavora nella PA</p>
   <nav class="topnav" aria-label="Sezioni">
@@ -202,6 +228,19 @@ footer.foot{margin:0;padding:12px 24px 36px;font-size:.85rem;color:var(--mut);te
 <main>
 <h1 id="secTitle"></h1><p class="sub" id="secSub" style="margin-bottom:20px"></p>
 <div id="tabG" class="sec">
+<section class="how" id="howCard" aria-labelledby="howT">
+  <h2 id="howT">Come funziona TimbraOre</h2>
+  <p class="lead">Uno strumento per tenere sotto controllo il tuo orario di lavoro. Fa i conti per te: l'ora di uscita, il buono pasto, la banca ore, le ferie e i permessi.</p>
+  <ol class="hsteps">
+    <li><b>Imposta le tue regole</b>Ore da fare, pausa, ferie e permessi: lo fai una volta sola e puoi cambiarle in Impostazioni.</li>
+    <li><b>Inserisci l'entrata</b>Scrivi l'orario o premi «Sono entrato adesso»: TimbraOre ti dice quando puoi uscire e quando matura il buono pasto.</li>
+    <li><b>Salva la giornata</b>A fine giornata inserisci l'uscita e premi «Salva nel calendario». Ferie, permessi e lavoro agile si aggiungono dal Calendario.</li>
+    <li><b>Guarda i saldi</b>Banca ore, ferie e permessi si aggiornano da soli. In «Saldi» vedi quanto ti resta.</li>
+  </ol>
+  <p class="hnote">I tuoi dati restano su questo computer: non vengono inviati a nessuno. Ogni tanto fai un backup dal Calendario, oppure attiva il salvataggio automatico in una cartella. TimbraOre non è il cartellino ufficiale: fa sempre fede il sistema di rilevazione presenze.</p>
+  <button type="button" id="howHide">Ho capito, nascondi</button>
+</section>
+<div class="msg warn hide" id="setupBanner"><span>Stai usando valori di esempio: imposta le tue regole per avere calcoli giusti.</span><button type="button" id="setupBtn">Imposta ora</button></div>
 <section class="card" id="entryCard">
   <h2>Entrata e pausa pranzo</h2>
   <label for="entry">Orario di entrata</label>
@@ -348,6 +387,7 @@ footer.foot{margin:0;padding:12px 24px 36px;font-size:.85rem;color:var(--mut);te
 <div id="tabR" class="sec hide">
 <section class="card">
   <h2>Regole di calcolo (modificabili per altri uffici)</h2>
+  <p style="margin:0 0 14px"><button type="button" id="wizOpen">Apri la configurazione guidata</button></p>
   <div>
     <div class="row">
       <div><label for="cMin">Entrata dalle</label><input type="text" id="cMin" inputmode="numeric"></div>
@@ -374,10 +414,12 @@ footer.foot{margin:0;padding:12px 24px 36px;font-size:.85rem;color:var(--mut);te
 <footer class="foot">Strumento non ufficiale, non collegato ad alcuna amministrazione: fa sempre fede il sistema di rilevazione presenze. I dati restano sul tuo computer. <a href="privacy.html">Privacy</a></footer>
 </div>
 
+<div id="wiz" class="wiz hide" role="dialog" aria-modal="true" aria-labelledby="wizT"><div class="wizCard" id="wizCard"></div></div>
+
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
-var DEF={min:'07:15',work:'7:12',brk:'30',vou:'6:31',ws:'13:00',we:'15:00',rate:'10',cfe:'26',cfs:'4',cpe:'36:00',cvs:'18:00',cpr:'18:00',cdh:'6:00',cla:'6',chk:''};
+var DEF={min:'07:15',work:'7:12',brk:'30',vou:'6:31',ws:'13:00',we:'15:00',rate:'10',cfe:'26',cfs:'4',cpe:'36:00',cvs:'18:00',cpr:'18:00',cdh:'6:00',cla:'6',chk:'',setup:'',how:''};
 var cfg=Object.assign({},DEF), st={entry:'',mode:'in',out:'',back:'',real:'',iExit:'',iBrk:'',iRec:'',tab:'g',day:''};
 var KEY='orario-lavoro-v1';
 function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||'null');if(s){if(s.cfg)cfg=Object.assign(cfg,s.cfg);if(s.st&&s.st.day===today())st=Object.assign(st,s.st)}}catch(e){}}
@@ -444,7 +486,7 @@ function setTab(t){
   if(!T[t])t='g';st.tab=t;
   ['G','H','P','L','R'].forEach(function(k){var on=t===k.toLowerCase();$('tab'+k).classList.toggle('hide',!on);$('t'+k).classList.toggle('on',on)});
   $('secTitle').textContent=T[t][0];$('secSub').textContent=t==='g'?new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'}):T[t][1];
-  if(t==='g'){var c=$('tab'+t.toUpperCase());c.insertBefore($('entryCard'),c.firstChild)}
+  if(t==='g'){var c=$('tab'+t.toUpperCase());c.insertBefore($('entryCard'),$('setupBanner').nextSibling)}
   if(t==='h'||t==='p'||t==='l')renderH();
   if(t==='g')weekR();
   save()}
@@ -484,7 +526,7 @@ function bind(){
   [['entry','entry'],['out','out'],['back','back'],['real','real'],['iExit','iExit'],['iBrk','iBrk'],['iRec','iRec']].forEach(function(a){$(a[0]).addEventListener('input',function(){st[a[1]]=$(a[0]).value;save();render()})});
   var map={cMin:'min',cWork:'work',cBrk:'brk',cVou:'vou',cWs:'ws',cWe:'we',cRate:'rate',cFe:'cfe',cFs:'cfs',cPe:'cpe',cVs:'cvs',cPr:'cpr',cDh:'cdh',cLa:'cla',cChk:'chk'};
   Object.keys(map).forEach(function(id){$(id).value=cfg[map[id]];$(id).addEventListener('input',function(){cfg[map[id]]=$(id).value;save();render()})});
-  $('reset').addEventListener('click',function(){cfg=Object.assign({},DEF);Object.keys(map).forEach(function(id){$(id).value=cfg[map[id]]});save();render()});
+  $('reset').addEventListener('click',function(){var _s=cfg.setup,_h=cfg.how;cfg=Object.assign({},DEF);cfg.setup=_s||'done';cfg.how=_h;Object.keys(map).forEach(function(id){$(id).value=cfg[map[id]]});save();render()});
 }
 
 var KH='orario-storico-v1',H={days:[],res:{},sal:{},pay:[],bk:''},hm='',edit=false;
@@ -666,12 +708,70 @@ function thApply(m){var r=document.documentElement;if(m==='light'||m==='dark')r.
   [['A','auto'],['L','light'],['D','dark']].forEach(function(x){$('th'+x[0]).classList.toggle('on',x[1]===m)})}
 function thInit(){var m='auto';try{m=localStorage.getItem('quadraore-theme')||'auto'}catch(e){}thApply(m);
   [['A','auto'],['L','light'],['D','dark']].forEach(function(x){$('th'+x[0]).addEventListener('click',function(){try{localStorage.setItem('quadraore-theme',x[1])}catch(e){}thApply(x[1])})})}
+var CM={cMin:'min',cWork:'work',cBrk:'brk',cVou:'vou',cWs:'ws',cWe:'we',cRate:'rate',cFe:'cfe',cFs:'cfs',cPe:'cpe',cVs:'cvs',cPr:'cpr',cDh:'cdh',cLa:'cla',cChk:'chk'};
+var WS=[
+ {t:'Il tuo orario',d:'Servono per calcolare quando puoi uscire e quando matura il buono pasto. I valori che vedi sono esempi: sostituiscili con i tuoi.',f:[
+  ['work','Ore da fare ogni giorno','hm','7:12'],['brk','Pausa pranzo (minuti)','int','30'],['min','Puoi entrare dalle','hm','7:15'],['vou','Il buono pasto matura dopo (ore di lavoro)','hm','6:31'],['ws','La pausa pranzo si fa dalle','hm','13:00'],['we','fino alle','hm','15:00']]},
+ {t:'Ferie e permessi',d:'Quelli che ti spettano in un anno. Di solito li trovi nel portale delle presenze, alla voce «Competenze».',f:[
+  ['cfe','Ferie (giorni)','num','26'],['cfs','Festività soppresse (giorni)','num','4'],['cpe','Permesso orario (ore:minuti)','hm','36:00'],['cvs','Permessi per visite specialistiche','hm','18:00'],['cpr','Permessi retribuiti per motivi personali o familiari','hm','18:00'],['cdh','Ore che valgono come un giorno','hm','6:00'],['cla','Giorni di lavoro agile al mese','num','6'],['rate','Straordinario: euro per ora (stima)','num','10']]},
+ {t:'Da dove parti',opt:1,d:'Facoltativo. Scrivi quanto ti resta oggi: lo trovi nel portale delle presenze. Se non lo sai, lascia vuoto e vai avanti, potrai farlo dopo da Saldi. Se usi i valori di oggi, nel Calendario registra solo le giornate da oggi in poi.',f:[
+  ['r_bo','Banca ore (con − se sei a debito)','sgn','12:30'],['r_fe','Ferie rimaste (giorni)','num','18'],['r_fp','Ferie dell\'anno scorso rimaste','num','2'],['r_fs','Festività soppresse rimaste','num','2'],['r_pe','Permesso orario rimasto','hm','33:30'],['r_vs','Visite specialistiche rimaste','hm','15:42'],['r_pr','Permessi per motivi personali o familiari rimasti','hm','18:00']]}
+];
+var wz={step:0,v:{}};
+function cfgSync(){Object.keys(CM).forEach(function(id){var e=$(id);if(e)e.value=cfg[CM[id]]})}
+function cfgChanged(){return Object.keys(DEF).some(function(k){return k!=='setup'&&k!=='how'&&String(cfg[k])!==String(DEF[k])})}
+function uiSetup(){$('howCard').classList.toggle('hide',cfg.how==='hide');$('setupBanner').classList.toggle('hide',cfg.setup!=='skipped')}
+function wizRead(){WS[wz.step].f.forEach(function(x){var e=$('w_'+x[0]);if(e)wz.v[x[0]]=e.value})}
+function wizCheck(){
+  var s=WS[wz.step];
+  for(var i=0;i<s.f.length;i++){var x=s.f[i],v=String(wz.v[x[0]]||'').trim(),ok=true,n=parseFloat(v.replace(',','.'));
+    if(v==='')ok=!!s.opt;
+    else if(x[2]==='hm')ok=p(v)!=null;
+    else if(x[2]==='int')ok=/^\d{1,3}$/.test(v);
+    else if(x[2]==='num')ok=!isNaN(n)&&n>=0;
+    else if(x[2]==='sgn')ok=ps(v)!=null;
+    if(!ok){$('wizErr').innerHTML=box('bad','Controlla «'+x[1]+'»: scrivi un valore come '+x[3]+'.');var el=$('w_'+x[0]);if(el)el.focus();return false}}
+  return true}
+function wizDraw(){
+  var s=WS[wz.step],last=wz.step===WS.length-1,h='<div class="wizHead"><span class="wizStep">Passo '+(wz.step+1)+' di '+WS.length+'</span><span class="wizDots">'+WS.map(function(_,i){return '<i class="'+(i<=wz.step?'on':'')+'"></i>'}).join('')+'</span></div>';
+  if(wz.step===0)h+='<h2 id="wizT">Benvenuto in TimbraOre</h2><p class="lead">Ci vuole un minuto per impostare le tue regole di lavoro. Puoi anche saltare e farlo dopo.</p><h3>'+s.t+'</h3><p class="lead">'+s.d+'</p>';
+  else h+='<h2 id="wizT">'+s.t+'</h2><p class="lead">'+s.d+'</p>';
+  h+='<div class="wf">'+s.f.map(function(x){return '<div><label for="w_'+x[0]+'">'+x[1]+'</label><input type="text" id="w_'+x[0]+'" inputmode="'+(x[2]==='hm'||x[2]==='int'?'numeric':'decimal')+'" placeholder="es. '+x[3]+'" value="'+esc(String(wz.v[x[0]]||'')).replace(/"/g,'&quot;')+'"></div>'}).join('')+'</div><div id="wizErr"></div>';
+  h+='<div class="wizFoot"><div><button type="button" class="linkBtn" id="wizSkip">Salta per ora</button>'+(wz.step===0?'<button type="button" class="linkBtn" id="wizRestore">Ho già un backup</button>':'')+'</div><div class="r">'+(wz.step>0?'<button type="button" id="wizBack">Indietro</button>':'')+'<button type="button" class="go" id="wizNext">'+(last?'Fine':'Avanti')+'</button></div></div>';
+  $('wizCard').innerHTML=h;var f=$('wizCard').querySelector('input');if(f)f.focus();
+}
+function wizOpenUi(){wz={step:0,v:{}};Object.keys(DEF).forEach(function(k){wz.v[k]=cfg[k]});$('wiz').classList.remove('hide');document.body.style.overflow='hidden';wizDraw()}
+function wizClose(){$('wiz').classList.add('hide');document.body.style.overflow=''}
+function wizSkip(){if(cfg.setup!=='done')cfg.setup='skipped';save();uiSetup();wizClose()}
+function wizApply(){
+  Object.keys(wz.v).forEach(function(k){if(k.indexOf('r_')!==0&&k!=='setup'&&k!=='how')cfg[k]=String(wz.v[k]).trim()});
+  var mk=iso(new Date()).slice(0,7),v=wz.v,m2={fe:'r_fe',fp:'r_fp',fs:'r_fs',pe:'r_pe',vs:'r_vs',pr:'r_pr'};
+  if(String(v.r_bo||'').trim()!=='')H.res[mk]=String(v.r_bo).trim();
+  H.sal=H.sal||{};
+  Object.keys(m2).forEach(function(b){var t=String(v[m2[b]]||'').trim();if(t!=='')(H.sal[mk]=H.sal[mk]||{})[b]=t});
+  cfg.setup='done';saveH();save();cfgSync();render();renderH();uiSetup();wizClose();
+}
+function wizBind(){
+  $('wiz').addEventListener('click',function(ev){var id=ev.target.id;
+    if(id==='wizSkip')wizSkip();
+    else if(id==='wizRestore'){wizClose();setTab('h');var b=$('bUp');if(b&&b.scrollIntoView)b.scrollIntoView()}
+    else if(id==='wizBack'){wizRead();wz.step--;wizDraw()}
+    else if(id==='wizNext'){wizRead();if(!wizCheck())return;if(wz.step<WS.length-1){wz.step++;wizDraw()}else wizApply()}});
+  $('wiz').addEventListener('keydown',function(ev){if(ev.key==='Escape')wizSkip();else if(ev.key==='Enter'&&ev.target.tagName==='INPUT'){ev.preventDefault();$('wizNext').click()}});
+  $('helpBtn').addEventListener('click',function(){cfg.how='';save();uiSetup();setTab('g');window.scrollTo(0,0)});
+  $('howHide').addEventListener('click',function(){cfg.how='hide';save();uiSetup()});
+  $('setupBtn').addEventListener('click',wizOpenUi);$('wizOpen').addEventListener('click',wizOpenUi);
+}
+function wizInit(){
+  if(!cfg.setup){if(!isEmpty()||cfgChanged()){cfg.setup='done';save()}else wizOpenUi()}
+  uiSetup();
+}
 function fClear(){edit=false;['fE','fX','fO','fB','fA'].forEach(function(i){$(i).value=''});$('fD').value=iso(new Date());document.querySelector('input[name=fm][value=in]').checked=true;$('fT').value='p';$('fN').value='';$('fQ').value='';$('fFull').checked=false;$('fPa').value='';$('fPb').value='';fPerm=[];$('ppA').value='';$('ppB').value='';$('ppQ').value='';ppDraw();applyT();$('fTitle').textContent='Aggiungi giornata';$('fCancel').classList.add('hide')}
 function addDay(o){H.days=H.days.filter(function(x){return x.d!==o.d});H.days.push(o);saveH();hm=o.d.slice(0,7)}
 function restore(txt,silent){
   try{var o=JSON.parse(txt),h=o.H||o;if(!h||!Array.isArray(h.days))throw 0;
    if(!silent&&!window.confirm('Sostituire i dati attuali con quelli del backup?'))return;
-   H={days:h.days,res:h.res||{},sal:h.sal||{},pay:h.pay||[],bk:H.bk};if(o.cfg)cfg=Object.assign(cfg,o.cfg);save();saveH();renderH();$('bInfo').innerHTML=box('ok','Backup ripristinato ('+H.days.length+' giornate).')}
+   H={days:h.days,res:h.res||{},sal:h.sal||{},pay:h.pay||[],bk:H.bk};if(o.cfg){cfg=Object.assign(cfg,o.cfg);cfg.setup='done'}save();saveH();renderH();$('bInfo').innerHTML=box('ok','Backup ripristinato ('+H.days.length+' giornate).')}
   catch(e){$('bInfo').innerHTML=box('bad','Backup non valido.')}
 }
 function bindH(){
@@ -777,7 +877,7 @@ function aUi(){
 $('aBtns').addEventListener('click',function(ev){var i=ev.target.id;if(i==='aPick')aPick();else if(i==='aGo')aResume();else if(i==='aOff')aOff()});
 document.addEventListener('click',function(){if(dirH&&aErr==='perm'&&!aAsked){aAsked=true;aResume()}},true);
 document.addEventListener('visibilitychange',function(){if(document.hidden&&aT){clearTimeout(aT);aT=null;autoSave()}});
-load();loadH();bind();bindH();render();setInterval(render,30000);aInit();
+load();loadH();bind();bindH();render();wizBind();wizInit();setInterval(render,30000);aInit();
 })();
 </script>
 </body>
