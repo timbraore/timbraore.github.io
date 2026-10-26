@@ -208,6 +208,72 @@ footer.foot{margin:0;padding:12px 24px 36px;font-size:.85rem;color:var(--mut);te
 .wizFoot .r{display:flex;gap:10px}
 .linkBtn{border:0;background:transparent;min-height:40px;color:var(--mut);text-decoration:underline;font-weight:400;padding:0 8px}
 .wizFoot .go{background:var(--ac);color:var(--onac);border-color:var(--ac)}
+
+/* ===== Adattamento a tablet e telefono ===== */
+@media (max-width:900px){
+  .top{display:grid;grid-template-columns:1fr auto;grid-template-areas:"help theme" "brand brand" "tag tag" "nav nav";gap:10px 8px;align-items:center;justify-items:center;padding:14px 16px 6px}
+  .helpBtn{position:static;grid-area:help;justify-self:start;min-height:38px;padding:0 14px}
+  .top .theme{position:static;grid-area:theme;justify-self:end;width:auto;min-width:200px}
+  .brandRow{grid-area:brand}.tagline{grid-area:tag;margin:0 0 4px}.topnav{grid-area:nav;max-width:100%}
+  main{padding:20px 18px 14px}
+  #tabG,#tabH,#tabP{grid-template-columns:minmax(0,1fr)}
+  #tabG #entryCard{max-width:none}
+  .hsteps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ring{--rs:min(380px,calc(100vw - 56px));width:var(--rs);height:var(--rs)}
+  .ringIn{inset:calc(var(--rs)*.09)}
+  .ringIn b{font-size:clamp(3rem,15vw,5.4rem)}
+  .dot{width:18px;height:18px;margin:-9px;transform:rotate(var(--a,0deg)) translateY(calc(var(--rs)*-.455))}
+  .hero{gap:22px}.heroSide{flex:1 1 100%;max-width:none}
+}
+@media (max-width:700px){
+  .brandRow svg{width:44px;height:44px}.wm{font-size:2.1rem}.tagline{font-size:.92rem}
+  .topnav{width:100%;border-radius:20px;gap:4px;padding:5px}
+  .topnav button.nv{min-height:42px;padding:0 14px;font-size:1rem;gap:7px}
+  .top .theme{min-width:0}
+  main{padding:14px 12px 8px}
+  h1{font-size:1.7rem}.sub{font-size:1rem}
+  .card{padding:16px;border-radius:16px}.card h2{font-size:1.1rem}
+  .how{padding:18px 16px}.hsteps{grid-template-columns:1fr}.hsteps li{padding-top:42px}
+  #tabG #setupBanner{padding:12px}
+  .entryRow input{flex:1 1 140px}.entryRow button{flex:1 1 100%}
+  .ring{--rs:min(340px,calc(100vw - 56px))}
+  .vouBox b{font-size:2.6rem}.hero{padding:0}
+  .wk{grid-template-columns:minmax(0,1fr);gap:8px}
+  .wd{flex-direction:row;align-items:stretch;min-height:0}
+  .wd .wh{flex-direction:column;justify-content:center;gap:0;min-width:70px;border-bottom:0;border-right:1px solid var(--bd);text-align:center}
+  .wd .wb{padding:10px 14px;justify-content:center;flex:1}.wd .v{font-size:1.4rem}
+  .wd.td .wh{border-right-color:transparent}
+  .wkHead{align-items:flex-start}
+  .big{grid-template-columns:minmax(0,1fr)}.kpi b{font-size:1.6rem}
+  .cal{gap:4px}.ch{font-size:.62rem}
+  .cal button.cd{min-height:52px;border-radius:10px;padding:3px 0 2px;gap:0}
+  .cd .n{width:22px;height:22px;line-height:22px;font-size:.8rem}
+  .cd .ic{font-size:.82rem;min-height:.95rem;line-height:1}
+  .cd small{font-size:.54rem;min-height:.6rem}
+  .leg{font-size:.72rem;gap:4px 10px}
+  .row{gap:10px}
+  .seg label{min-height:54px;font-size:.95rem}
+  .btns{gap:8px}
+  .msg{font-size:.95rem}
+  .wiz{padding:10px;align-items:end}
+  .wizCard{padding:20px 16px;border-radius:18px;max-height:calc(100vh - 20px)}
+  .wizCard h2{font-size:1.4rem}.wizCard h3{font-size:1.05rem}
+  .wf{grid-template-columns:minmax(0,1fr);gap:12px}
+  .wizFoot{flex-direction:column-reverse;align-items:stretch}.wizFoot .r{justify-content:space-between}.wizFoot .r button{flex:1}
+  footer.foot{padding:8px 16px 28px}
+}
+@media (max-width:380px){
+  .topnav button.nv{padding:0 11px;font-size:.95rem}
+  .wm{font-size:1.9rem}
+}
+
+@media (max-width:700px){
+  .topnav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;border-radius:18px;padding:4px}
+  .topnav button.nv{flex-direction:column;justify-content:center;gap:3px;min-height:58px;padding:6px 2px;font-size:.72rem;line-height:1.1;text-align:center;border-radius:14px}
+  .topnav button.nv svg{width:22px;height:22px}
+  .wizFoot{position:sticky;bottom:-20px;margin:18px -16px -20px;padding:12px 16px 16px;background:var(--card);border-top:1px solid var(--bd)}
+}
+@media (max-width:380px){.topnav button.nv{font-size:.66rem;padding:6px 0}}
 </style>
 </head>
 <body>
