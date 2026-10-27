@@ -531,6 +531,12 @@ body[data-ovt="ot"] .only-bank{display:none!important}body[data-ovt="bank"] .onl
     <div class="btns"><button id="reset">Ripristina valori standard</button></div>
   </div>
 </section>
+<section class="card" id="impCard">
+  <h2>Importa dal self-service (PDF)</h2>
+  <p class="sub" style="margin:0 0 12px">Carica il PDF «Prospetto Orari Mensile» che scarichi dal self-service. Il file resta sul tuo computer: viene letto qui e non viene inviato a nessuno. Servono solo giorno, orari e giustificativi: nome e badge vengono ignorati.</p>
+  <div class="btns"><button id="impPick" type="button">📄 Scegli il PDF</button><input type="file" id="impFile" accept="application/pdf,.pdf" class="hide"></div>
+  <div id="impOut"></div>
+</section>
 <section class="card">
   <h2>Backup dei dati</h2>
   <p class="sub" style="margin:0 0 8px">I dati sono salvati nel browser di questo dispositivo: si perdono se cancelli i dati di navigazione o cambi browser/PC. Fai un backup ogni tanto.</p>
@@ -676,8 +682,8 @@ function dayCalc(x){
   (x.pm||[]).forEach(function(z){var q=parseInt(z.q,10)||0,a1=p(z.a),b1=p(z.b),ov=0;
     if(a1!=null&&b1!=null&&b1>a1)ov=Math.min(q,Math.max(0,Math.min(b1,u)-Math.max(a1,e)));
     if(z.t==='bo'){pi+=ov;po+=q-ov}else pn+=q-ov});
-  var need=Math.max(0,R-(W+a)),cov=Math.min(po+pn,need),cn=Math.min(pn,cov),bank=pi+(cov-cn);
-  return{W:W,R:R,exp:e+R,need:need,cov:cov,unc:need-cov,bank:bank,saldo:W-R+a+cov-bank}}
+  var need=Math.max(0,R-(W+a)),covN=Math.min(pn,need),covB=Math.min(po,Math.max(0,need-covN)),cov=covN+covB;
+  return{W:W,R:R,exp:e+R,need:need,cov:cov,unc:need-cov,bank:pi+covB,saldo:W-R+a+pn-pi}}
 function bal(x){var a=parseInt(x.a,10)||0;if(x.t==='bo')return a-(parseInt(x.q,10)||0);if(x.t==='bg')return a-C().work;if(x.t&&x.t!=='p')return a;var r=dayCalc(x);return r?r.saldo:a}
 function inM(k){return H.days.filter(function(x){return x.d.slice(0,7)===k}).sort(function(a,b){return a.d<b.d?-1:1})}
 function mSum(k){return inM(k).reduce(function(t,x){return t+bal(x)},0)}
@@ -689,12 +695,14 @@ function resAuto(k,n){var ks=allK();if(!ks.length||ks[0]>=k||(n||0)>240)return 0
 function resOf(k,n){if(cfg.ovt==='ot')return 0;var r=H.res[k];if(r!=null&&r!==''){var v=ps(r);return v==null?0:v}return resAuto(k,n)}
 function sumH(){
   var cn={};inM(hm).forEach(function(x){var k=x.t||'p';cn[k]=(cn[k]||0)+1});
+  var bpM=inM(hm).filter(function(x){return x.t==='la'||((!x.t||x.t==='p')&&p(x.e)!=null&&p(x.x)!=null&&p(x.x)-p(x.e)>=C().vou)}).length;
   var ot=cfg.ovt==='ot',mz=missIn(hm),s=mSum(hm),c=C(),r=ot?0:resOf(hm),py=mDed(hm),t=r+s-py,man=H.res[hm]!=null&&H.res[hm]!=='',k2;
   if(ot){var o=Math.max(0,s),rc=Math.max(0,-s);
     k2=rc?'<div class="kpi pay"><small>Da recuperare</small><b>'+d(rc)+'</b><span>minuti in meno nel mese</span></div>':'<div class="kpi ok"><small>Straordinario del mese</small><b>'+d(o)+'</b><span>≈ '+eur(o/60*c.rate)+' a '+eur(c.rate)+'/ora</span></div>'}
   else k2='<div class="kpi ok"><small>Banca ore a fine mese</small><b>'+sg(t)+'</b><span>'+(t>0?'≈ '+eur(t/60*c.rate)+' a '+eur(c.rate)+'/ora':'residuo + saldo')+'</span></div>';
   $('hSum').innerHTML='<div class="big" style="margin-top:14px"><div class="kpi"><small>Saldo del mese</small><b>'+sg(s)+'</b><span>'+inM(hm).length+' giornate</span></div>'+k2+'</div>'+
    (inM(hm).length?box('info','Giornate: '+Object.keys(cn).map(function(k){return (TY[k]||'Altro')+' <b>'+cn[k]+'</b>'}).join(' · ')+'.'):'')+
+   (bpM?box('info','🍽️ Buoni pasto maturati nel mese: <b>'+bpM+'</b> (presenze e lavoro agile).'):'')+
    (mz.length?box('warn','⚠️ '+mz.length+(mz.length===1?' giornata lavorativa non compilata':' giornate lavorative non compilate')+' in questo mese.'):'')+
    (!ot&&py?box('info','💶 Ore liquidate nel mese: <b>−'+d(py)+'</b> (scalate dalla banca ore).'):'')+
    (!ot?box('info','Residuo di partenza: <b>'+sg(r)+'</b> '+(man?'(inserito a mano)':'(riportato dal mese precedente, se presente)')+'.'):'');
@@ -961,7 +969,8 @@ function statR(){
   var ab=avg(BA);T+=tile('Saldo medio per giornata',n?sg(Math.round(ab)):'–',n?'su '+n+(n===1?' presenza':' presenze'):none,n?(ab>=0?'ok':'warn'):'');
   if(ot){var oa=avg(otM);T+=tile('Straordinario medio al mese',d(Math.round(oa)),'≈ '+eur(oa/60*c.rate)+' al mese','ok')}
   else{var ma=avg(ms);T+=tile('Saldo medio al mese',sg(Math.round(ma)),'su '+ms.length+(ms.length===1?' mese':' mesi'),ma>=0?'ok':'warn')}
-  T+=tile('Buoni pasto maturati',String(P.filter(function(x,i){return G[i]>=c.vou}).length),n?'su '+n+' presenze':none);
+  var bpP=P.filter(function(x,i){return G[i]>=c.vou}).length,bpL=D.filter(function(x){return x.t==='la'}).length;
+  T+=tile('Buoni pasto maturati',String(bpP+bpL),bpP+' presenze + '+bpL+' lavoro agile');
   T+=tile('Oltre l\'orario / uscite anticipate',n?BA.filter(function(v){return v>0}).length+' / '+BA.filter(function(v){return v<0}).length:'–',n?(function(k){return k+(k===1?' giornata':' giornate')+' in orario'})(BA.filter(function(v){return v===0}).length):none);
   var ov=P.map(function(x){var dd=x.m==='out'&&p(x.o)!=null&&p(x.b)!=null?p(x.b)-p(x.o):0;return Math.max(0,dd-c.brk)}),ovN=ov.filter(function(v){return v>0}).length,ovT=ov.reduce(function(a,b){return a+b},0);
   T+=tile('Pause oltre '+c.brk+' minuti',n?Math.round(ovN/n*100)+'%':'–',n?ovN+(ovN===1?' giornata':' giornate')+' su '+n:none,ovN?'warn':'');
@@ -976,6 +985,105 @@ function statR(){
    '<h3 style="margin-top:26px">Giornate per tipo</h3><div class="chips2">'+Object.keys(cnt).map(function(k){return '<span>'+(ICO[k]||'')+' '+(TY[k]||'Altro')+' <b>'+cnt[k]+'</b></span>'}).join('')+'</div>'+
    '<p class="sub" style="margin:18px 0 0;font-size:.85rem">Le medie contano solo le giornate di presenza con entrata e uscita inserite. Il superamento della pausa si calcola solo dove hai segnato «Esco» con gli orari di uscita e rientro.</p>';
 }
+var pdfLib=null,imp=null;
+var MESI=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'],GGN={Dom:0,Lun:1,Mar:2,Mer:3,Gio:4,Ven:5,Sab:6};
+function impMsg(h){$('impOut').innerHTML=h}
+function impLoad(){return pdfLib?Promise.resolve(pdfLib):import('./pdf.min.mjs').then(function(m){m.GlobalWorkerOptions.workerSrc='./pdf.worker.min.mjs';pdfLib=m;return m})}
+function impRows(file){
+  return file.arrayBuffer().then(function(buf){return impLoad().then(function(m){return m.getDocument({data:new Uint8Array(buf)}).promise})}).then(function(doc){
+    var ps=[];for(var n=1;n<=doc.numPages;n++)ps.push(doc.getPage(n).then(function(pg){return pg.getTextContent()}));
+    return Promise.all(ps).then(function(all){var rows=[];
+      all.forEach(function(tc){var it=tc.items.filter(function(i){return String(i.str).trim()}).map(function(i){return{s:String(i.str).trim(),x:Math.round(i.transform[4]),y:i.transform[5]}}),rs=[];
+        it.forEach(function(i){var r=rs.filter(function(r){return Math.abs(r.y-i.y)<2.5})[0];if(!r){r={y:i.y,items:[]};rs.push(r)}r.items.push(i)});
+        rs.sort(function(a,b){return b.y-a.y}).forEach(function(r){r.items.sort(function(a,b){return a.x-b.x});rows.push(r.items)})});
+      return rows})})}
+function impKind(sg){var u=sg.toUpperCase().replace(/[`'’´]/g,'');
+  if(/LAVORO AGILE/.test(u))return'la';if(/MALATTIA/.test(u))return'ma';if(/^FERIE/.test(u))return'fe';if(/FESTIVITA\s*SOPPRESS/.test(u))return'fs';
+  if(/VISITA/.test(u))return'vs';if(/PERMESSO ORARIO/.test(u))return'pe';if(/RETRIBUIT|MOTIVI PERSONALI|FAMILIAR/.test(u))return'pr';if(/MISSIONE/.test(u))return'mi';return'al'}
+function impParse(rows){
+  var W=[],txt=rows.map(function(r){return r.map(function(i){return i.s}).join(' ')}),all=txt.join('\n');
+  var mm=all.match(/Mensile:\s*([A-Za-zÀ-ÿ]+)\s+(\d{4})/);if(!mm)throw new Error('format');
+  var mi=MESI.indexOf(mm[1].toLowerCase());if(mi<0)throw new Error('format');
+  var yy=+mm[2],mk=yy+'-'+String(mi+1).padStart(2,'0');
+  var hd=rows.filter(function(r){return r.some(function(i){return i.s==='Ord.'})&&r.some(function(i){return i.s==='Extra'})})[0];if(!hd)throw new Error('format');
+  var xo=hd.filter(function(i){return i.s==='Ord.'})[0].x,xe=hd.filter(function(i){return i.s==='Extra'})[0].x,xa=(hd.filter(function(i){return i.s==='Ass'})[0]||{x:xe+40}).x,b1=(xo+xe)/2,b2=(xe+xa)/2;
+  var DAY=/^(Lun|Mar|Mer|Gio|Ven|Sab|Dom)\.(\d{2})$/,END=/^(GIORNI|RITARDO|RIT\.|TOTALE|ACC\.|RESIDUO)/,blocks=[],cur=null;
+  rows.forEach(function(r){var f=r[0];
+    if(DAY.test(f.s)&&f.x<45){cur={g:f.s,rows:[r]};blocks.push(cur)}
+    else if(END.test(f.s))cur=null;
+    else if(cur&&/^\d{2}:\d{2}/.test(f.s)&&f.x<120)cur.rows.push(r)});
+  var days=[],xCount=0;
+  blocks.forEach(function(b){
+    var dm=b.g.match(DAY),dd=dm[2],dt=new Date(yy,mi,+dd,12);
+    if(dt.getMonth()!==mi||dt.getDay()!==GGN[dm[1]]){W.push('Giorno non coerente con la data: '+b.g+' (ignorato).');return}
+    var pairs=[],caus=[],num={a:null},X=false;
+    b.rows.forEach(function(r,ri){var left=[];
+      r.forEach(function(i,k){
+        if(ri===0&&k===0)return;
+        if(i.s==='X'&&i.x>xo-30){X=true;return}
+        if(/^\d+,\d{2}$/.test(i.s)&&i.x>=xo-20){var v=i.s.split(',');if(i.x>=b2)num.a=(+v[0])*60+(+v[1]);return}
+        if(i.x<xo-30)left.push(i.s)});
+      var t=left.join(' ').trim(),mt=t.match(/^(\d{2}:\d{2})\s+(\d{2}:\d{2})\b\s*(.*)$/);
+      if(mt){pairs.push([mt[1],mt[2]]);t=mt[3]}
+      else{var m1=t.match(/^(\d{2}:\d{2})\b\s*(.*)$/);if(m1){pairs.push([m1[1],null]);t=m1[2];W.push('Timbratura incompleta il '+dd+'/'+String(mi+1).padStart(2,'0')+'.')}}
+      if(t)caus.push(t)});
+    if(X)xCount++;
+    var c=caus.join(' ').replace(/\s+/g,' '),segs=c.indexOf('*')>=0?c.split('*').slice(1):[],gi=[];
+    segs.forEach(function(sg){sg=sg.replace(/\s*\b(RECUPERO|FLESSIBILITA|ACCANTONATO)\b.*$/i,'').trim();if(sg)gi.push(sg)});
+    var last=pairs.length?pairs[pairs.length-1][1]:null,hasP=pairs.length>0&&!!last&&!!pairs[0][0];
+    var rec={d:mk+'-'+dd,t:'p',e:'',x:'',m:'in',o:'',b:'',a:'',n:'',q:0},pm=[],full='';
+    if(hasP){rec.e=pairs[0][0];rec.x=last;var best=null;
+      for(var k=0;k<pairs.length-1;k++){var o=pairs[k][1],bb=pairs[k+1][0];if(!o||!bb)continue;var g=p(bb)-p(o);if(g>0&&(!best||g>best.g))best={o:o,b:bb,g:g}}
+      if(best){rec.m='out';rec.o=best.o;rec.b=best.b}
+      if(pairs.length>2)W.push('Più pause il '+dd+'/'+String(mi+1).padStart(2,'0')+': considero la più lunga.')}
+    gi.forEach(function(sg){var k=impKind(sg),sl=sg.match(/\((\d{2}:\d{2})-(\d{2}:\d{2})\)/),q=sl?p(sl[2])-p(sl[1]):(num.a||0),hourly=k==='vs'||k==='pe'||k==='pr'||(k==='al'&&sl);
+      if(k==='al')W.push('Giustificativo non riconosciuto il '+dd+'/'+String(mi+1).padStart(2,'0')+': «'+sg.slice(0,50)+'» (importato come «Altro»).');
+      if(hasP){if(hourly)pm.push(sl?{t:k,a:sl[1],b:sl[2],q:q}:{t:k,a:'',b:'',q:q});else W.push('Il '+dd+'/'+String(mi+1).padStart(2,'0')+' ci sono orari e «'+sg.slice(0,30)+'»: tengo la presenza.')}
+      else if(!full){full=k;rec.t=k;if(k==='vs'||k==='pe'||k==='pr')rec.q=q;if(k==='al')rec.n=sg.slice(0,60)}
+      else W.push('Più giustificativi il '+dd+'/'+String(mi+1).padStart(2,'0')+': tengo il primo.')});
+    if(pm.length)rec.pm=pm;
+    if(!hasP&&!full){if(X||num.a)W.push('Giornata non riconosciuta: '+b.g+'.');return}
+    days.push(rec)});
+  var S={},g=function(re){var m=all.match(re);return m?m:null},hm_=function(m){return m?(+m[1])*60+(+m[2]):null};
+  S.bo=hm_(g(/RESIDUO BO DIURNO(?!\s*ANNO)\s*:\s*(\d+):(\d{2})/));S.acc=hm_(g(/ACC\.BO DIURNO\s*:\s*(\d+):(\d{2})/));S.ritnr=hm_(g(/RIT\. MESE CORR\. NON RECUP\s*:\s*(\d+):(\d{2})/));
+  var m=g(/TOTALE BUONI PASTO\s*:\s*(\d+)/);S.buoni=m?+m[1]:null;
+  m=g(/(?:^|[\s|])FERIE\s*:\s*(\d+)/m);S.fe=m?+m[1]:null;m=g(/FERIE ANNO PRECEDENTE\s*:\s*(\d+)/);S.fp=m?+m[1]:null;m=g(/FESTIVIT[^:\n]*SOPPRESSE\s*:\s*(\d+)/);S.fs=m?+m[1]:null;
+  S.pe=hm_(g(/PERMESSO ORARIO\s*:\s*(\d+):(\d{2})/));S.vs=hm_(g(/ASSENZA ORARIA PER VISITA ART\.26 CCNL\s*:\s*(\d+):(\d{2})/));
+  var pd=all.slice(0,400).match(/(\d{2})\/(\d{2})\/(\d{4})/);S.pd=pd?pd[3]+'-'+pd[2]+'-'+pd[1]:'';
+  if(!days.length)W.push('Non ho trovato nessuna giornata.');
+  return{mk:mk,mi:mi,yy:yy,days:days,S:S,W:W,xCount:xCount}}
+function impPrev(R){
+  imp=R;var c=C(),ot=cfg.ovt==='ot',cnt={};R.days.forEach(function(d){cnt[d.t]=(cnt[d.t]||0)+1});
+  var ex=H.days.filter(function(x){return x.d.slice(0,7)===R.mk}).length,net=R.days.reduce(function(t,x){return t+bal(x)},0),S=R.S;
+  var bp=R.days.filter(function(x){return x.t==='la'||(x.t==='p'&&x.e&&x.x&&p(x.x)-p(x.e)>=c.vou)}).length,nm=MESI[R.mi]+' '+R.yy,nx=nextK(R.mk);
+  var h='<div class="msg ok"><b>Prospetto di '+nm+'</b>: '+R.days.length+' giornate riconosciute.</div><div class="chips2" style="margin:10px 0">'+Object.keys(cnt).map(function(k){return '<span>'+(ICO[k]||'')+' '+(TY[k]||'Altro')+' <b>'+cnt[k]+'</b></span>'}).join('')+'</div>';
+  if(S.buoni!=null)h+=box(S.buoni===bp?'ok':'warn','Buoni pasto: il PDF ne indica <b>'+S.buoni+'</b>, TimbraOre ne conta <b>'+bp+'</b>'+(S.buoni===bp?' ✓':'. Controlla le giornate.'));
+  if(!ot&&S.acc!=null){var ex2=S.acc-(S.ritnr||0);h+=box(Math.abs(net-ex2)<=1?'ok':'warn','Controllo banca ore: TimbraOre calcola <b>'+sg(net)+'</b>, il PDF indica <b>'+f(ex2)+'</b> accantonati'+(Math.abs(net-ex2)<=1?' ✓':'. Può dipendere da permessi a banca ore o da giornate non lette.'))}
+  if(R.W.length)h+=box('warn','<b>Da controllare</b><br>'+R.W.map(esc).join('<br>'));
+  h+='<div class="modeBox" style="margin-top:14px">';
+  if(ex)h+='<p style="margin:0 0 6px"><b>'+ex+'</b> giornate di '+nm+' sono già presenti:</p><label style="display:block;margin:0 0 4px"><input type="radio" name="impDup" value="rep" checked> sostituiscile con quelle del PDF</label><label style="display:block;margin:0 0 10px"><input type="radio" name="impDup" value="keep"> tieni le mie e aggiungi solo le mancanti</label>';
+  if(!ot&&S.bo!=null)h+='<label style="display:block;margin:6px 0"><input type="checkbox" id="impBo" checked> Allinea la banca ore al PDF: a fine '+MESI[R.mi]+' risulta <b>'+f(S.bo)+'</b>, e '+MESI[+nx.slice(5)-1]+' '+nx.slice(0,4)+' parte da questo valore</label>';
+  var rs=[];if(S.fe!=null)rs.push('ferie '+S.fe);if(S.fp!=null)rs.push('ferie anno prec. '+S.fp);if(S.fs!=null)rs.push('festività soppresse '+S.fs);if(S.pe!=null)rs.push('permesso orario '+f(S.pe));if(S.vs!=null)rs.push('visite '+f(S.vs));
+  if(rs.length&&S.pd){var pk=S.pd.slice(0,7);h+='<label style="display:block;margin:6px 0"><input type="checkbox" id="impRes"> Usa i residui del PDF come saldi di partenza di '+MESI[+pk.slice(5)-1]+' '+pk.slice(0,4)+': <b>'+rs.join(' · ')+'</b><br><span class="sub" style="font-size:.88rem">Valgono alla data di stampa ('+S.pd.slice(8)+'/'+S.pd.slice(5,7)+'/'+S.pd.slice(0,4)+'): spuntalo solo se vuoi ripartire da questi valori e registrare poi solo le giornate da quella data in poi.</span></label>'}
+  h+='</div><div class="btns"><button id="impGo" type="button" class="go" style="background:var(--ac);color:var(--onac);border-color:var(--ac)">Importa</button><button id="impNo" type="button">Annulla</button></div>';
+  impMsg(h)}
+function impDo(){
+  if(!imp)return;var R=imp,S=R.S,rep=document.querySelector('input[name=impDup]:checked'),keep=rep&&rep.value==='keep',have={};
+  H.days.forEach(function(x){have[x.d]=1});
+  H.days=H.days.filter(function(x){return x.d.slice(0,7)!==R.mk||keep});
+  R.days.forEach(function(x){if(!(keep&&have[x.d]))H.days.push(x)});
+  var nx=nextK(R.mk),msg=[];H.sal=H.sal||{};
+  if($('impBo')&&$('impBo').checked&&S.bo!=null){var st0=S.bo-mSum(R.mk)+mDed(R.mk);H.res[R.mk]=(st0<0?'-':'')+f(Math.abs(st0));H.res[nx]=f(S.bo);msg.push('banca ore allineata: '+MESI[R.mi]+' parte da '+(st0<0?'−':'')+f(Math.abs(st0))+' e chiude a '+f(S.bo))}
+  if($('impRes')&&$('impRes').checked&&S.pd){var pk=S.pd.slice(0,7),o=H.sal[pk]=H.sal[pk]||{};
+    if(S.fe!=null)o.fe=String(S.fe);if(S.fp!=null)o.fp=String(S.fp);if(S.fs!=null)o.fs=String(S.fs);if(S.pe!=null)o.pe=f(S.pe);if(S.vs!=null)o.vs=f(S.vs);msg.push('saldi di partenza di '+MESI[+pk.slice(5)-1]+' impostati')}
+  saveH();hm=R.mk;renderH();
+  impMsg(box('ok','Importate <b>'+R.days.length+'</b> giornate di '+MESI[R.mi]+' '+R.yy+(msg.length?' · '+msg.join(' · '):'')+'. Le trovi nel Calendario.'));imp=null}
+function impBind(){
+  $('impPick').addEventListener('click',function(){$('impFile').click()});
+  $('impFile').addEventListener('change',function(){var fl=$('impFile').files[0];$('impFile').value='';if(!fl)return;impMsg('<p class="sub">Leggo il PDF…</p>');
+    impRows(fl).then(impParse).then(impPrev).catch(function(e){var fm=e&&e.message==='format';
+      impMsg(box('bad',fm?'Questo PDF non sembra un «Prospetto Orari Mensile» del self-service: non riconosco l\'intestazione.':(pdfLib?'Non riesco a leggere questo file: è danneggiato o non è un PDF del self-service.':(location.protocol==='file:'?'L\'importazione funziona solo dal sito pubblicato, non dal file aperto dal computer.':'Non riesco a caricare il lettore di PDF. Controlla che i file pdf.min.mjs e pdf.worker.min.mjs siano nel sito.'))))})});
+  $('impOut').addEventListener('click',function(ev){var id=ev.target.id;if(id==='impGo')impDo();else if(id==='impNo'){imp=null;impMsg('')}})}
 function fClear(){edit=false;['fE','fX','fO','fB','fA'].forEach(function(i){$(i).value=''});$('fD').value=iso(new Date());document.querySelector('input[name=fm][value=in]').checked=true;$('fT').value='p';$('fN').value='';$('fQ').value='';$('fFull').checked=false;$('fPa').value='';$('fPb').value='';fPerm=[];$('ppA').value='';$('ppB').value='';$('ppQ').value='';ppDraw();applyT();$('fTitle').textContent='Aggiungi giornata';$('fCancel').classList.add('hide')}
 function addDay(o){H.days=H.days.filter(function(x){return x.d!==o.d});H.days.push(o);saveH();hm=o.d.slice(0,7)}
 function restore(txt,silent){
@@ -1087,7 +1195,7 @@ function aUi(){
 $('aBtns').addEventListener('click',function(ev){var i=ev.target.id;if(i==='aPick')aPick();else if(i==='aGo')aResume();else if(i==='aOff')aOff()});
 document.addEventListener('click',function(){if(dirH&&aErr==='perm'&&!aAsked){aAsked=true;aResume()}},true);
 document.addEventListener('visibilitychange',function(){if(document.hidden&&aT){clearTimeout(aT);aT=null;autoSave()}});
-load();loadH();bind();bindH();render();wizBind();wizInit();setInterval(render,30000);aInit();
+load();loadH();bind();bindH();render();wizBind();wizInit();impBind();setInterval(render,30000);aInit();
 })();
 </script>
 </body>
