@@ -330,6 +330,10 @@ body[data-ovt="ot"] .only-bank{display:none!important}body[data-ovt="bank"] .onl
   .heroEmpty{min-height:0}
 }
 @media (max-width:700px){.logoImg{width:84px;height:84px}}
+.per{display:flex;flex-wrap:wrap;gap:12px;background:transparent;padding:0}
+.pl{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:.95rem}.pl select{min-height:42px;margin:0;width:auto;min-width:150px}
+table.stT th,table.stT td{padding:9px 10px}table.stT tr.tot td{border-top:2px solid var(--bd2)}
+.sig{display:inline-block;margin-top:6px;font-weight:600}
 </style>
 </head>
 <body data-ovt="bank">
@@ -500,7 +504,7 @@ body[data-ovt="ot"] .only-bank{display:none!important}body[data-ovt="bank"] .onl
 
 <div id="tabT" class="sec hide">
 <section class="card" id="stCard">
-  <div class="stHead"><h2>Le tue statistiche</h2><div class="per" role="group" aria-label="Periodo"><button type="button" data-p="m">Questo mese</button><button type="button" data-p="t">Ultimi 3 mesi</button><button type="button" data-p="y">Quest'anno</button><button type="button" data-p="a">Tutto</button></div></div>
+  <div class="stHead"><h2>Le tue statistiche</h2><div class="per" role="group" aria-label="Periodo"><label class="pl">Anno <select id="stY"></select></label><label class="pl">Mese <select id="stM"></select></label></div></div>
   <div id="stBody"></div>
 </section>
 </div>
@@ -516,6 +520,7 @@ body[data-ovt="ot"] .only-bank{display:none!important}body[data-ovt="bank"] .onl
       <div><label for="cWork">Ore da fare (h:mm)</label><input type="text" id="cWork" inputmode="numeric"></div>
       <div><label for="cBrk">Pausa minima (min)</label><input type="text" id="cBrk" inputmode="numeric"></div>
       <div><label for="cVou">Buono pasto dopo (h:mm)</label><input type="text" id="cVou" inputmode="numeric"></div>
+      <div><label for="cMpr">Presenza minima per poter uscire (h:mm, vuoto = nessuna)</label><input type="text" id="cMpr" inputmode="numeric"></div>
       <div><label for="cWs">Finestra pausa da</label><input type="text" id="cWs" inputmode="numeric"></div>
       <div><label for="cWe">Finestra pausa a</label><input type="text" id="cWe" inputmode="numeric"></div>
       <div><label for="cRate">Straordinario (€/ora)</label><input type="text" id="cRate" inputmode="decimal"></div>
@@ -548,7 +553,7 @@ body[data-ovt="ot"] .only-bank{display:none!important}body[data-ovt="bank"] .onl
 </section>
 </div>
 </main>
-<footer class="foot">Strumento non ufficiale, non collegato ad alcuna amministrazione: fa sempre fede il sistema di rilevazione presenze. I dati restano sul tuo computer. <a href="privacy.html">Privacy</a></footer>
+<footer class="foot">Strumento non ufficiale, non collegato ad alcuna amministrazione: fa sempre fede il sistema di rilevazione presenze. I dati restano sul tuo computer. <a href="privacy.html">Privacy</a><br><span class="sig">Progetto e idea di vinz</span></footer>
 </div>
 
 <div id="wiz" class="wiz hide" role="dialog" aria-modal="true" aria-labelledby="wizT"><div class="wizCard" id="wizCard"></div></div>
@@ -556,7 +561,7 @@ body[data-ovt="ot"] .only-bank{display:none!important}body[data-ovt="bank"] .onl
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
-var DEF={min:'07:15',work:'7:12',brk:'30',vou:'6:31',ws:'13:00',we:'15:00',rate:'10',cfe:'26',cfs:'4',cpe:'36:00',cvs:'18:00',cpr:'18:00',cdh:'6:00',cla:'6',chk:'',setup:'',how:'',ovt:'bank'};
+var DEF={min:'07:15',work:'7:12',brk:'30',vou:'6:31',ws:'13:00',we:'15:00',rate:'10',cfe:'26',cfs:'4',cpe:'36:00',cvs:'18:00',cpr:'18:00',cdh:'6:00',cla:'6',chk:'',setup:'',how:'',ovt:'bank',mpres:'3:36'};
 var cfg=Object.assign({},DEF), st={entry:'',mode:'in',out:'',back:'',real:'',iExit:'',iBrk:'',iRec:'',tab:'g',day:''};
 var KEY='orario-lavoro-v1';
 function load(){try{var s=JSON.parse(localStorage.getItem(KEY)||'null');if(s){if(s.cfg)cfg=Object.assign(cfg,s.cfg);if(s.st&&s.st.day===today())st=Object.assign(st,s.st)}}catch(e){}}
@@ -572,7 +577,7 @@ function eur(x){try{return x.toLocaleString('it-IT',{style:'currency',currency:'
 function rate(){var r=parseFloat(String(cfg.rate).replace(',','.'));return isNaN(r)||r<0?10:r}
 function fnum(v,d){var r=parseFloat(String(v).replace(',','.'));return isNaN(r)||r<0?d:r}
 function fmin(v,d){var r=p(v);return r==null?d:r}
-function C(){return{cfe:fnum(cfg.cfe,26),cfs:fnum(cfg.cfs,4),cla:fnum(cfg.cla,6),cpe:fmin(cfg.cpe,2160),cvs:fmin(cfg.cvs,1080),cpr:fmin(cfg.cpr,1080),cdh:fmin(cfg.cdh,360),rate:rate(),min:p(cfg.min)||435,work:pd(cfg.work)||432,brk:pm(cfg.brk)==null?30:pm(cfg.brk),vou:pd(cfg.vou)||391,ws:p(cfg.ws)||780,we:p(cfg.we)||900}}
+function C(){return{cfe:fnum(cfg.cfe,26),cfs:fnum(cfg.cfs,4),cla:fnum(cfg.cla,6),cpe:fmin(cfg.cpe,2160),cvs:fmin(cfg.cvs,1080),cpr:fmin(cfg.cpr,1080),cdh:fmin(cfg.cdh,360),rate:rate(),mpr:fmin(cfg.mpres,0),min:p(cfg.min)||435,work:pd(cfg.work)||432,brk:pm(cfg.brk)==null?30:pm(cfg.brk),vou:pd(cfg.vou)||391,ws:p(cfg.ws)||780,we:p(cfg.we)||900}}
 
 var ctx=null;
 function render(){
@@ -581,7 +586,7 @@ function render(){
   $('outRow').classList.toggle('hide',st.mode!=='out');
   var res=$('res'),sim=$('simCard');
   if(e==null){res.classList.add('hide');sim.classList.add('hide');$('heroEmpty').classList.remove('hide');$('inputMsgs').innerHTML='';return}
-  if(e<c.min)im+=box('warn','⚠️ Entrata prima delle '+f(c.min)+': il calcolo parte comunque dall\'orario inserito, verifica come viene conteggiata.');
+  if(e<c.min)im+=box('info','ℹ️ Entrata prima delle '+f(c.min)+': l\'orario di lavoro conta dalle <b>'+f(c.min)+'</b>.');
   var brk=c.brk,extra=0,o=p(st.out),b=p(st.back),ro='',noTimes=false;
   if(st.mode==='out'){
     if(o==null||b==null){noTimes=true}
@@ -594,29 +599,31 @@ function render(){
     }
   }
   $('inputMsgs').innerHTML=im;
-  var req=c.work+brk,ex=e+req,vo=e+c.vou;
+  var ee=Math.max(e,c.min),req=c.work+brk,ex=ee+req,vo=ee+c.vou;
   res.classList.remove('hide');sim.classList.remove('hide');$('heroEmpty').classList.add('hide');
   $('rExit').textContent=f(ex);
   $('rReq').textContent='Da fare: '+d(req)+' dall\'entrata';
-  $('rVou').textContent=f(vo);$('lgIn').textContent=f(e);$('lgVou').textContent=f(vo);
+  $('rVou').textContent=f(vo);$('lgIn').textContent=f(ee);$('lgVou').textContent=f(vo);
   $('rVouS').textContent='Dopo '+d(c.vou)+' dall\'entrata';
   var m=ro;
   if(st.mode==='out'&&noTimes)m+=box('info','Con pausa fuori entro '+c.brk+' min esci alle <b>'+f(ex)+'</b>. Ogni minuto in più oltre i '+c.brk+' sposta l\'uscita di 1 minuto (es. '+(c.brk+3)+' min fuori → esci alle '+f(ex+3)+').');
   if(st.mode==='in')m+=box('info','Restando dentro, vengono trattenuti '+c.brk+' min di pausa automatica.');
+  if(c.mpr)m+=box('info','⏳ <b>Uscita minima '+f(ee+c.mpr)+'</b>: devi restare almeno '+d(c.mpr)+'. Uscendo prima la giornata risulta assenza.');
   m+=box('info','Da <b>'+f(ex+1)+'</b> (anche 1 minuto oltre le '+f(ex)+') è straordinario.');
   $('resMsgs').innerHTML=m;
 
   var r=p(st.real),sr='';
   if(r!=null){
+    if(c.mpr&&r<ee+c.mpr)sr+=box('bad','⚠️ Uscendo alle '+f(r)+', prima delle <b>'+f(ee+c.mpr)+'</b>, la giornata risulta <b>assenza</b> (presenza minima '+d(c.mpr)+').');
     var diff=r-ex;
     if(diff>0)sr+=box('ok','⏫ Straordinario: <b>'+d(diff)+'</b> (uscita alle '+f(r)+') · ≈ <b>'+eur(diff/60*c.rate)+'</b>');
     else if(diff<0)sr+=box('bad','⏬ Da recuperare: <b>'+d(diff)+'</b> (uscita alle '+f(r)+', anziché '+f(ex)+').');
     else sr+=box('ok','✅ Uscita puntuale: nessuno straordinario e nessun recupero.');
-    sr+=r-e>=c.vou?box('ok','🍽️ Buono pasto maturato.'):box('bad','🍽️ Buono pasto <b>non</b> maturato: servono '+d(c.vou)+' dall\'entrata (almeno fino alle '+f(vo)+').');
+    sr+=r-ee>=c.vou?box('ok','🍽️ Buono pasto maturato.'):box('bad','🍽️ Buono pasto <b>non</b> maturato: servono '+d(c.vou)+' dall\'entrata (almeno fino alle '+f(vo)+').');
   }
   $('simRes').innerHTML=sr;
-  live(e,ex,vo,req,c);
-  ctx={e:e,ex:ex,vo:vo,req:req,c:c};
+  live(ee,ex,vo,req,c);
+  ctx={e:ee,ex:ex,vo:vo,req:req,c:c};
 }
 function setTab(t){
   var T={g:['Oggi',''],h:['Calendario','Le tue giornate, mese per mese'],l:['Saldi','Ferie e permessi, banca ore o straordinario, ore liquidate'],t:['Statistiche','Come lavori, in media'],r:['Impostazioni','Regole di calcolo, backup e competenze']};
@@ -662,7 +669,7 @@ function bind(){
   
   document.querySelectorAll('input[name=mode]').forEach(function(r){r.checked=r.value===st.mode;r.addEventListener('change',function(){st.mode=r.value;save();render()})});
   [['entry','entry'],['out','out'],['back','back'],['real','real'],['iExit','iExit'],['iBrk','iBrk'],['iRec','iRec']].forEach(function(a){$(a[0]).addEventListener('input',function(){st[a[1]]=$(a[0]).value;save();render()})});
-  var map={cMin:'min',cWork:'work',cBrk:'brk',cVou:'vou',cWs:'ws',cWe:'we',cRate:'rate',cFe:'cfe',cFs:'cfs',cPe:'cpe',cVs:'cvs',cPr:'cpr',cDh:'cdh',cLa:'cla',cChk:'chk',cOvt:'ovt'};
+  var map={cMin:'min',cWork:'work',cBrk:'brk',cVou:'vou',cWs:'ws',cWe:'we',cRate:'rate',cFe:'cfe',cFs:'cfs',cPe:'cpe',cVs:'cvs',cPr:'cpr',cDh:'cdh',cLa:'cla',cChk:'chk',cOvt:'ovt',cMpr:'mpres'};
   Object.keys(map).forEach(function(id){$(id).value=cfg[map[id]];$(id).addEventListener('input',function(){cfg[map[id]]=$(id).value;save();render()})});
   $('reset').addEventListener('click',function(){var _s=cfg.setup,_h=cfg.how;cfg=Object.assign({},DEF);cfg.setup=_s||'done';cfg.how=_h;Object.keys(map).forEach(function(id){$(id).value=cfg[map[id]]});save();render()});
 }
@@ -676,15 +683,16 @@ function sg(m){return(m<0?'−':'+')+d(m)}
 var TY={p:'Presenza',la:'Lavoro agile',ma:'Malattia',fe:'Ferie',fs:'Festività soppressa',pe:'Permesso orario',vs:'Visita specialistica',pr:'Perm. retr. pers/fam',bo:'Permesso a banca ore',bg:'Giorno a banca ore',mi:'Missione',al:'Altro'};
 function applyT(){var tt=$('fT').value,pr=tt==='p',hq=tt==='pe'||tt==='vs'||tt==='pr'||tt==='bo';$('fProw').classList.toggle('hide',tt!=='bo');$('fQrow').classList.toggle('hide',!hq);$('fFullBox').classList.toggle('hide',tt!=='pr');document.querySelectorAll('.pres').forEach(function(e){e.classList.toggle('hide',!pr)});$('fOut').classList.toggle('hide',!(pr&&document.querySelector('input[name=fm]:checked').value==='out'));var HT={fe:"Scala 1 giorno dalle ferie (prima quelle dell'anno precedente).",fs:'Scala 1 giorno dalle festività soppresse.',la:'Conta come 1 giorno di lavoro agile del mese.'};$('fHint').innerHTML=pr?'':(tt==='bg'||tt==='bo')?box('info',tt==='bg'?'Scala '+f(C().work)+' dalla banca ore (giorno intero).':'Le ore vengono scalate dalla banca ore.'):box('info',(hq?'Le ore scalano dal saldo del giustificativo'+(tt==='pr'?' (usabile anche a giornata intera)':'')+'. ':HT[tt]?HT[tt]+' ':'')+'Non genera banca ore: usa la rettifica solo per correzioni.')}
 function dayCalc(x){
-  var e=p(x.e),u=p(x.x);if(e==null||u==null||u<e)return null;
-  var c=C(),du=0;if(x.m==='out'){var o=p(x.o),b=p(x.b);if(o!=null&&b!=null&&b>o)du=b-o}
-  var W=u-e,R=c.work+Math.max(c.brk,du),a=parseInt(x.a,10)||0,pi=0,po=0,pn=0;
+  var c=C(),e0=p(x.e),u=p(x.x);if(e0==null||u==null||u<e0)return null;
+  var e=Math.max(e0,c.min),du=0;if(x.m==='out'){var o=p(x.o),b=p(x.b);if(o!=null&&b!=null&&b>o)du=b-o}
+  var W=Math.max(0,u-e),R=c.work+Math.max(c.brk,du),a=parseInt(x.a,10)||0,pi=0,po=0,pn=0;
   (x.pm||[]).forEach(function(z){var q=parseInt(z.q,10)||0,a1=p(z.a),b1=p(z.b),ov=0;
     if(a1!=null&&b1!=null&&b1>a1)ov=Math.min(q,Math.max(0,Math.min(b1,u)-Math.max(a1,e)));
     if(z.t==='bo'){pi+=ov;po+=q-ov}else pn+=q-ov});
   var need=Math.max(0,R-(W+a)),covN=Math.min(pn,need),covB=Math.min(po,Math.max(0,need-covN)),cov=covN+covB;
-  return{W:W,R:R,exp:e+R,need:need,cov:cov,unc:need-cov,bank:pi+covB,saldo:W-R+a+pn-pi}}
-function bal(x){var a=parseInt(x.a,10)||0;if(x.t==='bo')return a-(parseInt(x.q,10)||0);if(x.t==='bg')return a-C().work;if(x.t&&x.t!=='p')return a;var r=dayCalc(x);return r?r.saldo:a}
+  return{W:W,R:R,exp:e+R,need:need,cov:cov,unc:need-cov,bank:pi+covB,saldo:W-R+a+pn-pi,abs:!!(c.mpr&&W<c.mpr)}}
+function isAbs(x){var r=(!x.t||x.t==='p')?dayCalc(x):null;return !!(r&&r.abs)}
+function bal(x){var a=parseInt(x.a,10)||0;if(x.t==='bo')return a-(parseInt(x.q,10)||0);if(x.t==='bg')return a-C().work;if(x.t&&x.t!=='p')return a;var r=dayCalc(x);return r?(r.abs?a:r.saldo):a}
 function inM(k){return H.days.filter(function(x){return x.d.slice(0,7)===k}).sort(function(a,b){return a.d<b.d?-1:1})}
 function mSum(k){return inM(k).reduce(function(t,x){return t+bal(x)},0)}
 function prevK(k){var y=+k.slice(0,4),m=+k.slice(5)-1;if(!m){m=12;y--}return y+'-'+String(m).padStart(2,'0')}
@@ -694,8 +702,9 @@ function mDed(k){return cfg.ovt==='ot'?0:mPay(k)}
 function resAuto(k,n){var ks=allK();if(!ks.length||ks[0]>=k||(n||0)>240)return 0;var pk=prevK(k);return resOf(pk,(n||0)+1)+mSum(pk)-mDed(pk)}
 function resOf(k,n){if(cfg.ovt==='ot')return 0;var r=H.res[k];if(r!=null&&r!==''){var v=ps(r);return v==null?0:v}return resAuto(k,n)}
 function sumH(){
+  var absN=C().mpr?inM(hm).filter(isAbs).length:0;
   var cn={};inM(hm).forEach(function(x){var k=x.t||'p';cn[k]=(cn[k]||0)+1});
-  var bpM=inM(hm).filter(function(x){return x.d<=iso(new Date())&&(x.t==='la'||((!x.t||x.t==='p')&&p(x.e)!=null&&p(x.x)!=null&&p(x.x)-p(x.e)>=C().vou))}).length;
+  var bpM=inM(hm).filter(function(x){return x.d<=iso(new Date())&&(x.t==='la'||((!x.t||x.t==='p')&&p(x.e)!=null&&p(x.x)!=null&&p(x.x)-Math.max(p(x.e),C().min)>=C().vou))}).length;
   var ot=cfg.ovt==='ot',mz=missIn(hm),s=mSum(hm),c=C(),r=ot?0:resOf(hm),py=mDed(hm),t=r+s-py,man=H.res[hm]!=null&&H.res[hm]!=='',k2;
   if(ot){var o=Math.max(0,s),rc=Math.max(0,-s);
     k2=rc?'<div class="kpi pay"><small>Da recuperare</small><b>'+d(rc)+'</b><span>minuti in meno nel mese</span></div>':'<div class="kpi ok"><small>Straordinario del mese</small><b>'+d(o)+'</b><span>≈ '+eur(o/60*c.rate)+' a '+eur(c.rate)+'/ora</span></div>'}
@@ -703,6 +712,7 @@ function sumH(){
   $('hSum').innerHTML='<div class="big" style="margin-top:14px"><div class="kpi"><small>Saldo del mese</small><b>'+sg(s)+'</b><span>'+inM(hm).length+' giornate</span></div>'+k2+'</div>'+
    (inM(hm).length?box('info','Giornate: '+Object.keys(cn).map(function(k){return (TY[k]||'Altro')+' <b>'+cn[k]+'</b>'}).join(' · ')+'.'):'')+
    (bpM?box('info','🍽️ Buoni pasto maturati nel mese: <b>'+bpM+'</b> (presenze e lavoro agile).'):'')+
+   (absN?box('warn','⚠️ <b>'+absN+(absN===1?' giornata':' giornate')+'</b> con presenza sotto il minimo ('+d(C().mpr)+'): '+(absN===1?'risulta assenza':'risultano assenze')+', da giustificare.'):'')+
    (mz.length?box('warn','⚠️ '+mz.length+(mz.length===1?' giornata lavorativa non compilata':' giornate lavorative non compilate')+' in questo mese.'):'')+
    (!ot&&py?box('info','💶 Ore liquidate nel mese: <b>−'+d(py)+'</b> (scalate dalla banca ore).'):'')+
    (!ot?box('info','Residuo di partenza: <b>'+sg(r)+'</b> '+(man?'(inserito a mano)':'(riportato dal mese precedente, se presente)')+'.'):'');
@@ -740,6 +750,7 @@ function calH(){
   for(var k=1;k<=n;k++){var ds=hm+'-'+String(k).padStart(2,'0'),x=rec[ds],fe=festa(ds),t=x&&x.t&&x.t!=='p',b=x?bal(x):0,ic='',sm='',cl='';
     if(x){ic=ICO[x.t||'p']&&t?ICO[x.t]:'';sm=t?'<small>'+(x.q?f(x.q):(TYS[x.t]||'ALT'))+'</small>':'<small class="'+(b<0?'neg':'pos')+'">'+sg2(b)+'</small>';cl=t?' k-'+x.t:(b<0?' lo':' ok')}
     if(x&&!t&&x.pm&&x.pm.length)ic=x.pm.slice(0,2).map(function(z){return ICO[z.t]||''}).join('');
+    if(x&&!t&&isAbs(x)){ic='⚠️';sm='<small class="neg">ASS</small>';cl=' miss'}
     if(fe&&!ic)ic=fe.i;
     if(pm[ds]){if(!ic)ic='💶';if(!sm)sm='<small class="neg">\u2212'+f(pm[ds])+'</small>'}
     if(!x&&isMiss(ds)){ic='⚠️';sm='<small class="neg">MANCA</small>';cl+=' miss'}
@@ -747,7 +758,7 @@ function calH(){
   h+='</div>';
   if(sel&&sel.slice(0,7)===hm){var x2=rec[sel],dt=new Date(sel+'T12:00'),f2=festa(sel);
     h+='<div class="msg info" style="margin-top:12px"><b>'+dt.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})+'</b>'+((dt.getDay()+6)%7>4?' · weekend':'')+(f2?' · '+f2.i+' '+esc(f2.n):'')+(pm[sel]?' · 💶 liquidate '+f(pm[sel]):'')+'<br>';
-    if(x2){var b2=bal(x2);h+=(x2.t&&x2.t!=='p'?ICO[x2.t]+' '+(TY[x2.t]||'Altro')+(x2.q?' '+f(x2.q):''):'🏢 Presenza '+(x2.e||'–')+'–'+(x2.x||'–')+(x2.m==='out'&&x2.o&&x2.b?' · pausa fuori '+x2.o+'–'+x2.b:'')+(x2.pm&&x2.pm.length?' · permessi: '+x2.pm.map(function(z){return (ICO[z.t]||'')+' '+(z.a&&z.b?z.a+'–'+z.b+' ':'')+f(z.q)}).join(', '):''))+' · saldo <b>'+sg(b2)+'</b>'+(x2.n?' · '+esc(x2.n):'')+'<div class="btns"><button data-ed="'+sel+'">✏️ Modifica</button><button data-del="'+sel+'">🗑️ Elimina</button></div>'}
+    if(x2){var b2=bal(x2);h+=(x2.t&&x2.t!=='p'?ICO[x2.t]+' '+(TY[x2.t]||'Altro')+(x2.q?' '+f(x2.q):''):'🏢 Presenza '+(x2.e||'–')+'–'+(x2.x||'–')+(x2.m==='out'&&x2.o&&x2.b?' · pausa fuori '+x2.o+'–'+x2.b:'')+(x2.pm&&x2.pm.length?' · permessi: '+x2.pm.map(function(z){return (ICO[z.t]||'')+' '+(z.a&&z.b?z.a+'–'+z.b+' ':'')+f(z.q)}).join(', '):''))+' · saldo <b>'+sg(b2)+'</b>'+(isAbs(x2)?' · ⚠️ presenza sotto il minimo: giornata considerata assenza':'')+(x2.n?' · '+esc(x2.n):'')+'<div class="btns"><button data-ed="'+sel+'">✏️ Modifica</button><button data-del="'+sel+'">🗑️ Elimina</button></div>'}
     else h+=(isMiss(sel)?'⚠️ Giornata lavorativa non compilata. ':'Nessuna registrazione. ')+'<div class="btns"><button data-new="'+sel+'">➕ Aggiungi</button></div>';
     h+='</div>'}
   h+='<div class="leg"><span><i>■</i> weekend e festività</span><span>🏢 presenza (saldo)</span><span>🏠 lavoro agile</span><span>🤒 malattia</span><span>🏖️ ferie</span><span>🕒 permesso orario</span><span>🩺 visita specialistica</span><span>👨‍👩‍👧 perm. retr. pers/fam</span><span>🗓️ festività soppressa</span><span>⚠️ giornata da compilare</span><span class="only-bank">⏳ perm. banca ore</span><span class="only-bank">🏦 giorno banca ore</span><span>💶 liquidazione</span><span>🚆 missione</span><span>📌 altro</span></div>';
@@ -843,13 +854,14 @@ function weekR(){
     else if(fe)b='<span class="tag w">'+fe.i+' Festività</span><small>'+esc(fe.n)+'</small>';
     else if(isMiss(ds)){cl=' ms';b='<span class="tag w">⚠ Da compilare</span>'}
     else b='<small>'+(ds===today?'In corso':'Nessuna registrazione')+'</small>';
+    if(x&&(!x.t||x.t==='p')&&x.e&&x.x&&isAbs(x)){cl=' ms';b='<span class="tag w">⚠ Assenza</span><small>sotto la presenza minima</small>'}
     h+='<button type="button" class="wd'+(ds===today?' td':'')+cl+'" data-wd="'+ds+'"><span class="wh"><span>'+dt.toLocaleDateString('it-IT',{weekday:'short'})+'</span><span>'+dt.getDate()+'</span></span><span class="wb">'+b+'</span></button>';
   }
   g.innerHTML=h;
 }
 function nowInit(){
   $('cOvt').addEventListener('change',function(){cfg.ovt=$('cOvt').value==='ot'?'ot':'bank';save();applyMode();renderH();render()});
-  document.querySelectorAll('.per button').forEach(function(b){b.addEventListener('click',function(){stP=b.dataset.p;statR()})});
+  $('stY').addEventListener('change',function(){stY=$('stY').value;statR()});$('stM').addEventListener('change',function(){stM=$('stM').value;statR()});
   $('wkPrev').addEventListener('click',function(){wk--;weekR()});$('wkNext').addEventListener('click',function(){wk++;weekR()});
   $('wkGrid').addEventListener('click',function(ev){var b=ev.target.closest('[data-wd]');if(!b)return;sel=b.dataset.wd;hm=sel.slice(0,7);setTab('h')});
 }
@@ -857,10 +869,10 @@ function thApply(m){var r=document.documentElement;if(m==='light'||m==='dark')r.
   [['A','auto'],['L','light'],['D','dark']].forEach(function(x){$('th'+x[0]).classList.toggle('on',x[1]===m)})}
 function thInit(){var m='auto';try{m=localStorage.getItem('quadraore-theme')||'auto'}catch(e){}thApply(m);
   [['A','auto'],['L','light'],['D','dark']].forEach(function(x){$('th'+x[0]).addEventListener('click',function(){try{localStorage.setItem('quadraore-theme',x[1])}catch(e){}thApply(x[1])})})}
-var CM={cMin:'min',cWork:'work',cBrk:'brk',cVou:'vou',cWs:'ws',cWe:'we',cRate:'rate',cFe:'cfe',cFs:'cfs',cPe:'cpe',cVs:'cvs',cPr:'cpr',cDh:'cdh',cLa:'cla',cChk:'chk',cOvt:'ovt'};
+var CM={cMin:'min',cWork:'work',cBrk:'brk',cVou:'vou',cWs:'ws',cWe:'we',cRate:'rate',cFe:'cfe',cFs:'cfs',cPe:'cpe',cVs:'cvs',cPr:'cpr',cDh:'cdh',cLa:'cla',cChk:'chk',cOvt:'ovt',cMpr:'mpres'};
 var WS=[
  {t:'Il tuo orario',d:'Servono per calcolare quando puoi uscire e quando matura il buono pasto. I valori che vedi sono esempi: sostituiscili con i tuoi.',f:[
-  ['ovt','Come vengono trattati i minuti in più?','sel','',[['bank','Banca ore: i minuti si accumulano e puoi usarli o farteli pagare'],['ot','Straordinario: i minuti in più vengono pagati mese per mese']]],['work','Ore da fare ogni giorno','hm','7:12'],['brk','Pausa pranzo (minuti)','int','30'],['min','Puoi entrare dalle','hm','7:15'],['vou','Il buono pasto matura dopo (ore di lavoro)','hm','6:31'],['ws','La pausa pranzo si fa dalle','hm','13:00'],['we','fino alle','hm','15:00']]},
+  ['ovt','Come vengono trattati i minuti in più?','sel','',[['bank','Banca ore: i minuti si accumulano e puoi usarli o farteli pagare'],['ot','Straordinario: i minuti in più vengono pagati mese per mese']]],['work','Ore da fare ogni giorno','hm','7:12'],['brk','Pausa pranzo (minuti)','int','30'],['min','Puoi entrare dalle','hm','7:15'],['vou','Il buono pasto matura dopo (ore di lavoro)','hm','6:31'],['mpres','Presenza minima per poter uscire (lascia vuoto se non c\'è)','hmo','3:36'],['ws','La pausa pranzo si fa dalle','hm','13:00'],['we','fino alle','hm','15:00']]},
  {t:'Ferie e permessi',d:'Quelli che ti spettano in un anno. Di solito li trovi nel portale delle presenze, alla voce «Competenze».',f:[
   ['cfe','Ferie (giorni)','num','26'],['cfs','Festività soppresse (giorni)','num','4'],['cpe','Permesso orario (ore:minuti)','hm','36:00'],['cvs','Permessi per visite specialistiche','hm','18:00'],['cpr','Permessi retribuiti per motivi personali o familiari','hm','18:00'],['cdh','Ore che valgono come un giorno','hm','6:00'],['cla','Giorni di lavoro agile al mese','num','6'],['rate','Straordinario: euro per ora (stima)','num','10']]},
  {t:'Da dove parti',opt:1,d:'Facoltativo. Scrivi quanto ti resta oggi: lo trovi nel portale delle presenze. Se non lo sai, lascia vuoto e vai avanti, potrai farlo dopo da Saldi. Se usi i valori di oggi, nel Calendario registra solo le giornate da oggi in poi.',f:[
@@ -875,9 +887,9 @@ function wizRead(){wizF(WS[wz.step]).forEach(function(x){var e=$('w_'+x[0]);if(e
 function wizCheck(){
   var s=WS[wz.step],F=wizF(s);
   for(var i=0;i<F.length;i++){var x=F[i],v=String(wz.v[x[0]]||'').trim(),ok=true,n=parseFloat(v.replace(',','.'));
-    if(x[2]==='sel')ok=true;
+    if(x[2]==='sel'||(x[2]==='hmo'&&v===''))ok=true;
     else if(v==='')ok=!!s.opt;
-    else if(x[2]==='hm')ok=p(v)!=null;
+    else if(x[2]==='hm'||x[2]==='hmo')ok=p(v)!=null;
     else if(x[2]==='int')ok=/^\d{1,3}$/.test(v);
     else if(x[2]==='num')ok=!isNaN(n)&&n>=0;
     else if(x[2]==='sgn')ok=ps(v)!=null;
@@ -887,7 +899,7 @@ function wizDraw(){
   var s=WS[wz.step],last=wz.step===WS.length-1,h='<div class="wizHead"><span class="wizStep">Passo '+(wz.step+1)+' di '+WS.length+'</span><span class="wizDots">'+WS.map(function(_,i){return '<i class="'+(i<=wz.step?'on':'')+'"></i>'}).join('')+'</span></div>';
   if(wz.step===0)h+='<h2 id="wizT">Benvenuto in TimbraOre</h2><p class="lead">Ci vuole un minuto per impostare le tue regole di lavoro. Puoi anche saltare e farlo dopo.</p><h3>'+s.t+'</h3><p class="lead">'+s.d+'</p>';
   else h+='<h2 id="wizT">'+s.t+'</h2><p class="lead">'+s.d+'</p>';
-  h+='<div class="wf">'+wizF(s).map(function(x){if(x[2]==='sel')return '<div class="full"><label for="w_'+x[0]+'">'+x[1]+'</label><select id="w_'+x[0]+'">'+x[4].map(function(o){return '<option value="'+o[0]+'"'+(String(wz.v[x[0]])===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></div>';return '<div><label for="w_'+x[0]+'">'+x[1]+'</label><input type="text" id="w_'+x[0]+'" inputmode="'+(x[2]==='hm'||x[2]==='int'?'numeric':'decimal')+'" placeholder="es. '+x[3]+'" value="'+esc(String(wz.v[x[0]]||'')).replace(/"/g,'&quot;')+'"></div>'}).join('')+'</div><div id="wizErr"></div>';
+  h+='<div class="wf">'+wizF(s).map(function(x){if(x[2]==='sel')return '<div class="full"><label for="w_'+x[0]+'">'+x[1]+'</label><select id="w_'+x[0]+'">'+x[4].map(function(o){return '<option value="'+o[0]+'"'+(String(wz.v[x[0]])===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></div>';return '<div><label for="w_'+x[0]+'">'+x[1]+'</label><input type="text" id="w_'+x[0]+'" inputmode="'+(x[2]==='hm'||x[2]==='hmo'||x[2]==='int'?'numeric':'decimal')+'" placeholder="es. '+x[3]+'" value="'+esc(String(wz.v[x[0]]||'')).replace(/"/g,'&quot;')+'"></div>'}).join('')+'</div><div id="wizErr"></div>';
   h+='<div class="wizFoot"><div><button type="button" class="linkBtn" id="wizSkip">Salta per ora</button>'+(wz.step===0?'<button type="button" class="linkBtn" id="wizRestore">Ho già un backup</button>':'')+'</div><div class="r">'+(wz.step>0?'<button type="button" id="wizBack">Indietro</button>':'')+'<button type="button" class="go" id="wizNext">'+(last?'Fine':'Avanti')+'</button></div></div>';
   $('wizCard').innerHTML=h;var f=$('wizCard').querySelector('input');if(f)f.focus();
 }
@@ -917,7 +929,7 @@ function wizInit(){
   if(!cfg.setup){if(!isEmpty()||cfgChanged()){cfg.setup='done';save()}else wizOpenUi()}
   uiSetup();
 }
-var lastOvt='',stP='y';
+var lastOvt='',stY=String(new Date().getFullYear()),stM='';
 function pT0(){return cfg.ovt==='ot'?'Registra straordinario liquidato':'Registra ore liquidate'}
 function fillTypes(){
   var bank=cfg.ovt!=='ot',key=bank?'b':'o';
@@ -950,15 +962,19 @@ function otR(){
 }
 function statR(){
   var B=$('stBody');if(!B)return;
-  var c=C(),ot=cfg.ovt==='ot',now=new Date(),y0=now.getFullYear(),st0='';
-  if(stP==='m')st0=iso(now).slice(0,7)+'-01';else if(stP==='t')st0=iso(new Date(y0,now.getMonth()-2,1));else if(stP==='y')st0=y0+'-01-01';
-  document.querySelectorAll('.per button').forEach(function(b){b.classList.toggle('on',b.dataset.p===stP)});
-  var td=iso(new Date()),D=H.days.filter(function(x){return (!st0||x.d>=st0)&&x.d<=td});
+  var c=C(),ot=cfg.ovt==='ot',now=new Date(),y0=String(now.getFullYear()),yrs={};
+  H.days.forEach(function(x){yrs[x.d.slice(0,4)]=1});yrs[y0]=1;
+  var selY=$('stY'),selM=$('stM');
+  selY.innerHTML='<option value="">Tutti gli anni</option>'+Object.keys(yrs).sort().reverse().map(function(y){return '<option value="'+y+'">'+y+'</option>'}).join('');
+  if(stY&&!yrs[stY])stY=y0;selY.value=stY;
+  if(!selM.options.length)selM.innerHTML='<option value="">Tutti i mesi</option>'+MESI.map(function(m,i){return '<option value="'+String(i+1).padStart(2,'0')+'">'+m.charAt(0).toUpperCase()+m.slice(1)+'</option>'}).join('');
+  selM.value=stM;
+  var td=iso(now),D=H.days.filter(function(x){return (!stY||x.d.slice(0,4)===stY)&&(!stM||x.d.slice(5,7)===stM)&&x.d<=td});
   if(!D.length){B.innerHTML=box('info','Nel periodo scelto non ci sono ancora giornate registrate.');return}
-  var P=D.filter(function(x){return (!x.t||x.t==='p')&&p(x.e)!=null&&p(x.x)!=null&&p(x.x)>=p(x.e)});
+  var P=D.filter(function(x){return (!x.t||x.t==='p')&&p(x.e)!=null&&p(x.x)!=null&&p(x.x)>=p(x.e)&&!isAbs(x)});
   function avg(a){return a.length?a.reduce(function(t,v){return t+v},0)/a.length:0}
   function mn(a){return Math.min.apply(null,a)}function mx(a){return Math.max.apply(null,a)}
-  var E=P.map(function(x){return p(x.e)}),X=P.map(function(x){return p(x.x)}),G=P.map(function(x,i){return X[i]-E[i]}),BA=P.map(bal);
+  var E=P.map(function(x){return p(x.e)}),X=P.map(function(x){return p(x.x)}),G=P.map(function(x,i){return X[i]-Math.max(E[i],c.min)}),BA=P.map(bal);
   var months={};D.forEach(function(x){var k=x.d.slice(0,7);months[k]=(months[k]||0)+bal(x)});
   var mk=Object.keys(months).sort(),ms=mk.map(function(k){return months[k]}),otM=ms.map(function(v){return Math.max(0,v)});
   function tile(l,v,sub,cl){return '<div class="stat'+(cl?' '+cl:'')+'"><small>'+l+'</small><b>'+v+'</b><span>'+(sub||'&nbsp;')+'</span></div>'}
@@ -980,9 +996,14 @@ function statR(){
   function bars(items,fmt,w){var m=Math.max.apply(null,items.map(function(i){return Math.abs(i.v)}).concat([1]));
     return '<div class="bars'+(w?' w':'')+'">'+items.map(function(i){return '<div class="br"><span class="bl">'+i.l+'</span><span class="bt"><i class="'+(i.v<0?'neg':'pos')+'" style="width:'+(i.n&&i.v?Math.max(3,Math.round(Math.abs(i.v)/m*100)):0)+'%"></i></span><b>'+fmt(i)+'</b></div>'}).join('')+'</div>'}
   var cnt={};D.forEach(function(x){var k=x.t||'p';cnt[k]=(cnt[k]||0)+1});
+  var nAbs=D.filter(function(x){return (!x.t||x.t==='p')&&isAbs(x)}).length;
+  var WD=['Lun','Mar','Mer','Gio','Ven'].map(function(l,i){var ix=[];P.forEach(function(x,k){if((new Date(x.d+'T12:00').getDay()+6)%7===i)ix.push(k)});
+    return {l:l,n:ix.length,e:avg(ix.map(function(k){return E[k]})),x:avg(ix.map(function(k){return X[k]})),g:avg(ix.map(function(k){return G[k]})),b:avg(ix.map(function(k){return BA[k]}))}});
+  function trow(r,tot){return '<tr'+(tot?' class="tot"':'')+'><td><b>'+r.l+'</b></td><td>'+(r.n?f(Math.round(r.e)):'–')+'</td><td>'+(r.n?f(Math.round(r.x)):'–')+'</td><td>'+(r.n?d(Math.round(r.g)):'–')+'</td><td class="'+(r.n&&r.b<0?'neg':'pos')+'">'+(r.n?sg(Math.round(r.b)):'–')+'</td><td>'+r.n+'</td></tr>'}
+  var tbl='<h3 style="margin-top:26px">Entrata e uscita media per giorno della settimana</h3><div style="overflow-x:auto"><table class="stT"><tr><th>Giorno</th><th>Entrata media</th><th>Uscita media</th><th>Permanenza media</th><th>Saldo medio</th><th>Giornate</th></tr>'+WD.map(function(r){return trow(r)}).join('')+trow({l:'Tutti i giorni',n:n,e:avg(E),x:avg(X),g:avg(G),b:avg(BA)},1)+'</table></div>';
   B.innerHTML='<div class="stGrid">'+T+'</div><div class="stCols"><div><h3>Saldo medio per giorno della settimana</h3>'+bars(W,function(i){return i.n?sg(Math.round(i.v)):'–'})+'</div>'+
    '<div><h3>'+(ot?'Straordinario mese per mese':'Saldo mese per mese')+'</h3>'+bars(MI,function(i){return ot?(i.v>=0?d(i.v)+' · ≈ '+eur(i.v/60*c.rate):'da recuperare '+d(-i.v)):sg(Math.round(i.v))},1)+'</div></div>'+
-   '<h3 style="margin-top:26px">Giornate per tipo</h3><div class="chips2">'+Object.keys(cnt).map(function(k){return '<span>'+(ICO[k]||'')+' '+(TY[k]||'Altro')+' <b>'+cnt[k]+'</b></span>'}).join('')+'</div>'+
+   tbl+'<h3 style="margin-top:26px">Giornate per tipo</h3><div class="chips2">'+Object.keys(cnt).map(function(k){return '<span>'+(ICO[k]||'')+' '+(TY[k]||'Altro')+' <b>'+cnt[k]+'</b></span>'}).join('')+(nAbs?'<span>⚠️ Sotto la presenza minima <b>'+nAbs+'</b></span>':'')+'</div>'+
    '<p class="sub" style="margin:18px 0 0;font-size:.85rem">Contano solo i giorni fino a oggi; le medie solo le giornate di presenza con entrata e uscita inserite. Il superamento della pausa si calcola solo dove hai segnato «Esco» con gli orari di uscita e rientro.</p>';
 }
 var pdfLib=null,imp=null;
@@ -1055,7 +1076,7 @@ function impParse(rows){
 function impPrev(R){
   imp=R;var c=C(),ot=cfg.ovt==='ot',cnt={};R.days.forEach(function(d){cnt[d.t]=(cnt[d.t]||0)+1});
   var ex=H.days.filter(function(x){return x.d.slice(0,7)===R.mk}).length,net=R.days.reduce(function(t,x){return t+bal(x)},0),S=R.S;
-  var bp=R.days.filter(function(x){return x.t==='la'||(x.t==='p'&&x.e&&x.x&&p(x.x)-p(x.e)>=c.vou)}).length,nm=MESI[R.mi]+' '+R.yy,nx=nextK(R.mk);
+  var bp=R.days.filter(function(x){return x.t==='la'||(x.t==='p'&&x.e&&x.x&&p(x.x)-Math.max(p(x.e),c.min)>=c.vou)}).length,nm=MESI[R.mi]+' '+R.yy,nx=nextK(R.mk);
   var h='<div class="msg ok"><b>Prospetto di '+nm+'</b>: '+R.days.length+' giornate riconosciute.</div><div class="chips2" style="margin:10px 0">'+Object.keys(cnt).map(function(k){return '<span>'+(ICO[k]||'')+' '+(TY[k]||'Altro')+' <b>'+cnt[k]+'</b></span>'}).join('')+'</div>';
   if(S.buoni!=null)h+=box(S.buoni===bp?'ok':'warn','Buoni pasto: il PDF ne indica <b>'+S.buoni+'</b>, TimbraOre ne conta <b>'+bp+'</b>'+(S.buoni===bp?' ✓':'. Controlla le giornate.'));
   if(!ot&&S.acc!=null){var ex2=S.acc-(S.ritnr||0);h+=box(Math.abs(net-ex2)<=1?'ok':'warn','Controllo banca ore: TimbraOre calcola <b>'+sg(net)+'</b>, il PDF indica <b>'+f(ex2)+'</b> accantonati'+(Math.abs(net-ex2)<=1?' ✓':'. Può dipendere da permessi a banca ore o da giornate non lette.'))}
