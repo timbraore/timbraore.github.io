@@ -549,6 +549,7 @@ table.stT th,table.stT td{padding:9px 10px}table.stT tr.tot td{border-top:2px so
   </div>
   <div class="seg pres" style="margin-top:12px"><label><input type="radio" name="fm" value="in" checked><span>Pausa: resto dentro</span></label><label><input type="radio" name="fm" value="out"><span>Pausa: esco</span></label></div>
   <div class="row hide" id="fOut"><div><label for="fO">Uscita pausa</label><input type="time" id="fO"></div><div><label for="fB">Rientro</label><input type="time" id="fB"></div></div>
+  <div class="pres only-bank" style="margin-top:14px"><label for="fOt">Straordinario pagato (h:mm, facoltativo)</label><input type="text" id="fOt" inputmode="numeric" placeholder="es. 1:33"><p class="sub" style="margin:4px 0 0;font-size:.78rem">Minuti pagati come straordinario: non entrano nella banca ore.</p></div>
   <div class="pres" id="ppBox" style="margin-top:14px;padding:12px;border:1px dashed var(--bd);border-radius:12px">
     <label style="font-weight:600;color:var(--tx);margin:0">Permessi in questa giornata</label>
     <p class="sub" style="margin:2px 0 8px;font-size:.78rem">Copri uno slot in cui non eri in ufficio (es. uscita anticipata) con banca ore o un permesso.</p>
@@ -790,7 +791,8 @@ function dayCalc(x){
     if(a1!=null&&b1!=null&&b1>a1)ov=Math.min(q,Math.max(0,Math.min(b1,u)-Math.max(a1,e)));
     if(z.t==='bo'){pi+=ov;po+=q-ov}else pn+=q-ov});
   var need=Math.max(0,R-(W+a)),covN=Math.min(pn,need),covB=Math.min(po,Math.max(0,need-covN)),cov=covN+covB;
-  return{W:W,R:R,exp:e+R,need:need,cov:cov,unc:need-cov,bank:pi+covB,saldo:W-R+a+pn-pi,abs:!!(c.mpr&&W<c.mpr)}}
+  var otm=cfg.ovt==='ot'?0:(parseInt(x.ot,10)||0);
+  return{W:W,R:R,exp:e+R,need:need,cov:cov,unc:need-cov,bank:pi+covB,saldo:W-R+a+pn-pi-otm,abs:!!(c.mpr&&W<c.mpr)}}
 function isAbs(x){var r=(!x.t||x.t==='p')?dayCalc(x):null;return !!(r&&r.abs)}
 function bal(x){var a=parseInt(x.a,10)||0;if(x.t==='bo')return a-(parseInt(x.q,10)||0);if(x.t==='bg')return a-C().work;if(x.t&&x.t!=='p')return a;var r=dayCalc(x);return r?(r.abs?a:r.saldo):a}
 function inM(k){return H.days.filter(function(x){return x.d.slice(0,7)===k}).sort(function(a,b){return a.d<b.d?-1:1})}
@@ -803,6 +805,7 @@ function resAuto(k,n){var ks=allK();if(!ks.length||ks[0]>=k||(n||0)>240)return 0
 function resOf(k,n){if(cfg.ovt==='ot')return 0;var r=H.res[k];if(r!=null&&r!==''){var v=ps(r);return v==null?0:v}return resAuto(k,n)}
 function sumH(){
   var absN=C().mpr?inM(hm).filter(isAbs).length:0;
+  var otP=cfg.ovt==='ot'?0:inM(hm).reduce(function(t,x){return t+(parseInt(x.ot,10)||0)},0);
   var cn={};inM(hm).forEach(function(x){var k=x.t||'p';cn[k]=(cn[k]||0)+1});
   var bpM=inM(hm).filter(function(x){return x.d<=iso(new Date())&&(x.t==='la'||((!x.t||x.t==='p')&&p(x.e)!=null&&p(x.x)!=null&&p(x.x)-Math.max(p(x.e),C().min)>=C().vou))}).length;
   var ot=cfg.ovt==='ot',mz=missIn(hm),s=mSum(hm),c=C(),r=ot?0:resOf(hm),py=mDed(hm),t=r+s-py,man=H.res[hm]!=null&&H.res[hm]!=='',k2;
@@ -812,6 +815,7 @@ function sumH(){
   $('hSum').innerHTML='<div class="big" style="margin-top:14px"><div class="kpi"><small>Saldo del mese</small><b>'+sg(s)+'</b><span>'+inM(hm).length+' giornate</span></div>'+k2+'</div>'+
    (inM(hm).length?box('info','Giornate: '+Object.keys(cn).map(function(k){return (TY[k]||'Altro')+' <b>'+cn[k]+'</b>'}).join(' · ')+'.'):'')+
    (bpM?box('info','🍽️ Buoni pasto maturati nel mese: <b>'+bpM+'</b> (presenze e lavoro agile).'):'')+
+   (otP?box('info','💶 Straordinario pagato nel mese: <b>'+d(otP)+'</b> (non conta nella banca ore).'):'')+
    (absN?box('warn','⚠️ <b>'+absN+(absN===1?' giornata':' giornate')+'</b> con presenza sotto il minimo ('+d(C().mpr)+'): '+(absN===1?'risulta assenza':'risultano assenze')+', da giustificare.'):'')+
    (mz.length?box('warn','⚠️ '+mz.length+(mz.length===1?' giornata lavorativa non compilata':' giornate lavorative non compilate')+' in questo mese.'):'')+
    (!ot&&py?box('info','💶 Ore liquidate nel mese: <b>−'+d(py)+'</b> (scalate dalla banca ore).'):'')+
@@ -850,6 +854,7 @@ function calH(){
   for(var k=1;k<=n;k++){var ds=hm+'-'+String(k).padStart(2,'0'),x=rec[ds],fe=festa(ds),t=x&&x.t&&x.t!=='p',b=x?bal(x):0,ic='',sm='',cl='';
     if(x){ic=ICO[x.t||'p']&&t?ICO[x.t]:'';sm=t?'<small>'+(x.q?f(x.q):(TYS[x.t]||'ALT'))+'</small>':'<small class="'+(b<0?'neg':'pos')+'">'+sg2(b)+'</small>';cl=t?' k-'+x.t:(b<0?' lo':' ok')}
     if(x&&!t&&x.pm&&x.pm.length)ic=x.pm.slice(0,2).map(function(z){return ICO[z.t]||''}).join('');
+    if(x&&!t&&x.ot&&!ic&&cfg.ovt!=='ot')ic='💶';
     if(x&&!t&&isAbs(x)){ic='⚠️';sm='<small class="neg">ASS</small>';cl=' miss'}
     if(fe&&!ic)ic=fe.i;
     if(pm[ds]){if(!ic)ic='💶';if(!sm)sm='<small class="neg">\u2212'+f(pm[ds])+'</small>'}
@@ -858,7 +863,7 @@ function calH(){
   h+='</div>';
   if(sel&&sel.slice(0,7)===hm){var x2=rec[sel],dt=new Date(sel+'T12:00'),f2=festa(sel);
     h+='<div class="msg info" style="margin-top:12px"><b>'+dt.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})+'</b>'+((dt.getDay()+6)%7>4?' · weekend':'')+(f2?' · '+f2.i+' '+esc(f2.n):'')+(pm[sel]?' · 💶 liquidate '+f(pm[sel]):'')+'<br>';
-    if(x2){var b2=bal(x2);h+=(x2.t&&x2.t!=='p'?ICO[x2.t]+' '+(TY[x2.t]||'Altro')+(x2.q?' '+f(x2.q):''):'🏢 Presenza '+(x2.e||'–')+'–'+(x2.x||'–')+(x2.m==='out'&&x2.o&&x2.b?' · pausa fuori '+x2.o+'–'+x2.b:'')+(x2.pm&&x2.pm.length?' · permessi: '+x2.pm.map(function(z){return (ICO[z.t]||'')+' '+(z.a&&z.b?z.a+'–'+z.b+' ':'')+f(z.q)}).join(', '):''))+' · saldo <b>'+sg(b2)+'</b>'+(isAbs(x2)?' · ⚠️ presenza sotto il minimo: giornata considerata assenza':'')+'<div class="btns"><button data-del="'+sel+'">🗑️ Elimina la giornata</button></div>'}
+    if(x2){var b2=bal(x2);h+=(x2.t&&x2.t!=='p'?ICO[x2.t]+' '+(TY[x2.t]||'Altro')+(x2.q?' '+f(x2.q):''):'🏢 Presenza '+(x2.e||'–')+'–'+(x2.x||'–')+(x2.m==='out'&&x2.o&&x2.b?' · pausa fuori '+x2.o+'–'+x2.b:'')+(x2.pm&&x2.pm.length?' · permessi: '+x2.pm.map(function(z){return (ICO[z.t]||'')+' '+(z.a&&z.b?z.a+'–'+z.b+' ':'')+f(z.q)}).join(', '):''))+' · saldo <b>'+sg(b2)+'</b>'+(x2.ot&&cfg.ovt!=='ot'?' · 💶 straordinario pagato <b>'+f(x2.ot)+'</b> (fuori dalla banca ore)':'')+(isAbs(x2)?' · ⚠️ presenza sotto il minimo: giornata considerata assenza':'')+'<div class="btns"><button data-del="'+sel+'">🗑️ Elimina la giornata</button></div>'}
     else h+=(isMiss(sel)?'⚠️ Giornata lavorativa non compilata. ':'Nessuna registrazione. ')+'Compila il modulo a destra.';
     var nt=noteOf(sel);if(nt)h+='<div class="dnote">📝 '+esc(nt)+'</div>';
     h+='</div>'}
@@ -1093,6 +1098,7 @@ function statR(){
   var ov=P.map(function(x){var dd=x.m==='out'&&p(x.o)!=null&&p(x.b)!=null?p(x.b)-p(x.o):0;return Math.max(0,dd-c.brk)}),ovN=ov.filter(function(v){return v>0}).length,ovT=ov.reduce(function(a,b){return a+b},0);
   T+=tile('Pause oltre '+c.brk+' minuti',n?Math.round(ovN/n*100)+'%':'–',n?ovN+(ovN===1?' giornata':' giornate')+' su '+n:none,ovN?'warn':'');
   T+=tile('Minuti di superamento',n?d(ovT):'–',n?(ovN?'in media '+Math.round(ovT/ovN)+' min per volta':'nessun superamento'):none,ovT?'warn':'');
+  var otS=ot?0:D.reduce(function(t,x){return t+(parseInt(x.ot,10)||0)},0);if(otS)T+=tile('Straordinario pagato',d(otS),'fuori dalla banca ore');
   var W=['Lun','Mar','Mer','Gio','Ven'].map(function(l,i){var a=P.filter(function(x){return (new Date(x.d+'T12:00').getDay()+6)%7===i}).map(bal);return {l:l,n:a.length,v:avg(a)}});
   var MI=mk.map(function(k,i){return {l:new Date(k+'-01T12:00').toLocaleDateString('it-IT',{month:'short',year:'2-digit'}),n:1,v:ms[i]}});
   function bars(items,fmt,w){var m=Math.max.apply(null,items.map(function(i){return Math.abs(i.v)}).concat([1]));
@@ -1122,7 +1128,7 @@ function impRows(file){
       return rows})})}
 function impKind(sg){var u=sg.toUpperCase().replace(/[`'’´]/g,'');
   if(/LAVORO AGILE/.test(u))return'la';if(/MALATTIA/.test(u))return'ma';if(/^FERIE/.test(u))return'fe';if(/FESTIVITA\s*SOPPRESS/.test(u))return'fs';
-  if(/VISITA/.test(u))return'vs';if(/PERMESSO ORARIO/.test(u))return'pe';if(/RETRIBUIT|MOTIVI PERSONALI|FAMILIAR/.test(u))return'pr';if(/MISSIONE/.test(u))return'mi';return'al'}
+  if(/VISITA/.test(u))return'vs';if(/PERMESSO ORARIO/.test(u))return'pe';if(/RETRIBUIT|MOTIVI PERSONALI|FAMILIAR/.test(u))return'pr';if(/MISSIONE/.test(u))return'mi';if(/STRAORDINARIO/.test(u))return'ot';return'al'}
 function impParse(rows){
   var W=[],txt=rows.map(function(r){return r.map(function(i){return i.s}).join(' ')}),all=txt.join('\n');
   var mm=all.match(/Mensile:\s*([A-Za-zÀ-ÿ]+)\s+(\d{4})/);if(!mm)throw new Error('format');
@@ -1135,7 +1141,7 @@ function impParse(rows){
     if(DAY.test(f.s)&&f.x<45){cur={g:f.s,rows:[r]};blocks.push(cur)}
     else if(END.test(f.s))cur=null;
     else if(cur&&/^\d{2}:\d{2}/.test(f.s)&&f.x<120)cur.rows.push(r)});
-  var days=[],xCount=0;
+  var days=[],pays=[],xCount=0;
   blocks.forEach(function(b){
     var dm=b.g.match(DAY),dd=dm[2],dt=new Date(yy,mi,+dd,12);
     if(dt.getMonth()!==mi||dt.getDay()!==GGN[dm[1]]){W.push('Giorno non coerente con la data: '+b.g+' (ignorato).');return}
@@ -1154,18 +1160,19 @@ function impParse(rows){
     var c=caus.join(' ').replace(/\s+/g,' '),segs=c.indexOf('*')>=0?c.split('*').slice(1):[],gi=[];
     segs.forEach(function(sg){sg=sg.replace(/\s*\b(RECUPERO|FLESSIBILITA|ACCANTONATO)\b.*$/i,'').trim();if(sg)gi.push(sg)});
     var last=pairs.length?pairs[pairs.length-1][1]:null,hasP=pairs.length>0&&!!last&&!!pairs[0][0];
-    var rec={d:mk+'-'+dd,t:'p',e:'',x:'',m:'in',o:'',b:'',a:'',n:'',q:0},pm=[],full='';
+    var rec={d:mk+'-'+dd,t:'p',e:'',x:'',m:'in',o:'',b:'',a:'',n:'',q:0},pm=[],full='',otm=0,hadOt=false;
     if(hasP){rec.e=pairs[0][0];rec.x=last;var best=null;
       for(var k=0;k<pairs.length-1;k++){var o=pairs[k][1],bb=pairs[k+1][0];if(!o||!bb)continue;var g=p(bb)-p(o);if(g>0&&(!best||g>best.g))best={o:o,b:bb,g:g}}
       if(best){rec.m='out';rec.o=best.o;rec.b=best.b}
       if(pairs.length>2)W.push('Più pause il '+dd+'/'+String(mi+1).padStart(2,'0')+': considero la più lunga.')}
     gi.forEach(function(sg){var k=impKind(sg),sl=sg.match(/\((\d{2}:\d{2})-(\d{2}:\d{2})\)/),q=sl?p(sl[2])-p(sl[1]):(num.a||0),hourly=k==='vs'||k==='pe'||k==='pr'||(k==='al'&&sl);
+      if(k==='ot'){hadOt=true;var du=sg.match(/\(durata\s+(\d+),(\d{2})\)/i);if(sl&&hasP)otm+=q;else if(du){var dq=(+du[1])*60+(+du[2]);pays.push({id:'imp-'+rec.d+'-'+dq,d:rec.d,q:dq,e:'',n:'Dal PDF: straordinario (ore di banca ore pagate)'})}else W.push('Straordinario non interpretabile il '+dd+'/'+String(mi+1).padStart(2,'0')+'.');return}
       if(k==='al')W.push('Giustificativo non riconosciuto il '+dd+'/'+String(mi+1).padStart(2,'0')+': «'+sg.slice(0,50)+'» (importato come «Altro»).');
       if(hasP){if(hourly)pm.push(sl?{t:k,a:sl[1],b:sl[2],q:q}:{t:k,a:'',b:'',q:q});else W.push('Il '+dd+'/'+String(mi+1).padStart(2,'0')+' ci sono orari e «'+sg.slice(0,30)+'»: tengo la presenza.')}
       else if(!full){full=k;rec.t=k;if(k==='vs'||k==='pe'||k==='pr')rec.q=q;if(k==='al')rec.n=sg.slice(0,60)}
       else W.push('Più giustificativi il '+dd+'/'+String(mi+1).padStart(2,'0')+': tengo il primo.')});
-    if(pm.length)rec.pm=pm;
-    if(!hasP&&!full){if(X||num.a)W.push('Giornata non riconosciuta: '+b.g+'.');return}
+    if(pm.length)rec.pm=pm;if(otm)rec.ot=otm;
+    if(!hasP&&!full){if(!hadOt&&(X||num.a))W.push('Giornata non riconosciuta: '+b.g+'.');return}
     days.push(rec)});
   var S={},g=function(re){var m=all.match(re);return m?m:null},hm_=function(m){return m?(+m[1])*60+(+m[2]):null};
   S.bo=hm_(g(/RESIDUO BO DIURNO(?!\s*ANNO)\s*:\s*(\d+):(\d{2})/));S.acc=hm_(g(/ACC\.BO DIURNO\s*:\s*(\d+):(\d{2})/));S.ritnr=hm_(g(/RIT\. MESE CORR\. NON RECUP\s*:\s*(\d+):(\d{2})/));
@@ -1174,17 +1181,20 @@ function impParse(rows){
   S.pe=hm_(g(/PERMESSO ORARIO\s*:\s*(\d+):(\d{2})/));S.vs=hm_(g(/ASSENZA ORARIA PER VISITA ART\.26 CCNL\s*:\s*(\d+):(\d{2})/));
   var pd=all.slice(0,400).match(/(\d{2})\/(\d{2})\/(\d{4})/);S.pd=pd?pd[3]+'-'+pd[2]+'-'+pd[1]:'';
   if(!days.length)W.push('Non ho trovato nessuna giornata.');
-  return{mk:mk,mi:mi,yy:yy,days:days,S:S,W:W,xCount:xCount}}
+  return{mk:mk,mi:mi,yy:yy,days:days,pays:pays,S:S,W:W,xCount:xCount}}
 function impPrev(R){
-  imp=R;var c=C(),ot=cfg.ovt==='ot',cnt={};R.days.forEach(function(d){cnt[d.t]=(cnt[d.t]||0)+1});
+  imp=R;var c=C(),ot=cfg.ovt==='ot',cnt={},otT=ot?0:R.days.reduce(function(t,x){return t+(x.ot||0)},0),payT=R.pays.reduce(function(t,x){return t+x.q},0);R.days.forEach(function(d){cnt[d.t]=(cnt[d.t]||0)+1});
   var ex=H.days.filter(function(x){return x.d.slice(0,7)===R.mk}).length,net=R.days.reduce(function(t,x){return t+bal(x)},0),S=R.S;
   var bp=R.days.filter(function(x){return x.t==='la'||(x.t==='p'&&x.e&&x.x&&p(x.x)-Math.max(p(x.e),c.min)>=c.vou)}).length,nm=MESI[R.mi]+' '+R.yy,nx=nextK(R.mk);
-  var h='<div class="msg ok"><b>Prospetto di '+nm+'</b>: '+R.days.length+' giornate riconosciute.</div><div class="chips2" style="margin:10px 0">'+Object.keys(cnt).map(function(k){return '<span>'+(ICO[k]||'')+' '+(TY[k]||'Altro')+' <b>'+cnt[k]+'</b></span>'}).join('')+'</div>';
+  var h='<div class="msg ok"><b>Prospetto di '+nm+'</b>: '+R.days.length+' giornate riconosciute.</div><div class="chips2" style="margin:10px 0">'+Object.keys(cnt).map(function(k){return '<span>'+(ICO[k]||'')+' '+(TY[k]||'Altro')+' <b>'+cnt[k]+'</b></span>'}).join('')+(otT?'<span>💶 Straordinario pagato <b>'+d(otT)+'</b></span>':'')+(payT?'<span>💶 Ore di banca ore pagate <b>'+d(payT)+'</b></span>':'')+'</div>';
+  if(otT||payT)h+=box('info','💶 Quello che nel PDF è «straordinario» è stato pagato: non conta più come banca ore'+(otT?' (i minuti pagati sono già esclusi dal saldo dei giorni)':'')+'.');
   if(S.buoni!=null)h+=box(S.buoni===bp?'ok':'warn','Buoni pasto: il PDF ne indica <b>'+S.buoni+'</b>, TimbraOre ne conta <b>'+bp+'</b>'+(S.buoni===bp?' ✓':'. Controlla le giornate.'));
   if(!ot&&S.acc!=null){var ex2=S.acc-(S.ritnr||0);h+=box(Math.abs(net-ex2)<=1?'ok':'warn','Controllo banca ore: TimbraOre calcola <b>'+sg(net)+'</b>, il PDF indica <b>'+f(ex2)+'</b> accantonati'+(Math.abs(net-ex2)<=1?' ✓':'. Può dipendere da permessi a banca ore o da giornate non lette.'))}
   if(R.W.length)h+=box('warn','<b>Da controllare</b><br>'+R.W.map(esc).join('<br>'));
   h+='<div class="modeBox" style="margin-top:14px">';
   if(ex)h+='<p style="margin:0 0 6px"><b>'+ex+'</b> giornate di '+nm+' sono già presenti:</p><label style="display:block;margin:0 0 4px"><input type="radio" name="impDup" value="rep" checked> sostituiscile con quelle del PDF</label><label style="display:block;margin:0 0 10px"><input type="radio" name="impDup" value="keep"> tieni le mie e aggiungi solo le mancanti</label>';
+  if(R.pays.length){var man=(H.pay||[]).filter(function(x){return String(x.id||'').indexOf('imp-')!==0&&x.d.slice(0,7)===R.mk}),mq=man.reduce(function(t,x){return t+(parseInt(x.q,10)||0)},0);
+    h+='<label style="display:block;margin:6px 0"><input type="checkbox" id="impPay"'+(man.length?'':' checked')+'> Registra anche le ore di banca ore pagate secondo il PDF: <b>'+d(payT)+'</b> ('+R.pays.map(function(x){return x.d.slice(8)+'/'+x.d.slice(5,7)}).join(', ')+')'+(man.length?'<br><span class="sub" style="font-size:.88rem">Nel mese hai già inserito a mano <b>'+d(mq)+'</b> di ore liquidate: le tengo. Spunta solo se non sono le stesse, per non contarle due volte.</span>':'')+'</label>'}
   if(!ot&&S.bo!=null)h+='<label style="display:block;margin:6px 0"><input type="checkbox" id="impBo" checked> Allinea la banca ore al PDF: a fine '+MESI[R.mi]+' risulta <b>'+f(S.bo)+'</b>, e '+MESI[+nx.slice(5)-1]+' '+nx.slice(0,4)+' parte da questo valore</label>';
   var rs=[];if(S.fe!=null)rs.push('ferie '+S.fe);if(S.fp!=null)rs.push('ferie anno prec. '+S.fp);if(S.fs!=null)rs.push('festività soppresse '+S.fs);if(S.pe!=null)rs.push('permesso orario '+f(S.pe));if(S.vs!=null)rs.push('visite '+f(S.vs));
   if(rs.length&&S.pd){var pk=S.pd.slice(0,7);h+='<label style="display:block;margin:6px 0"><input type="checkbox" id="impRes"> Usa i residui del PDF come saldi di partenza di '+MESI[+pk.slice(5)-1]+' '+pk.slice(0,4)+': <b>'+rs.join(' · ')+'</b><br><span class="sub" style="font-size:.88rem">Valgono alla data di stampa ('+S.pd.slice(8)+'/'+S.pd.slice(5,7)+'/'+S.pd.slice(0,4)+'): spuntalo solo se vuoi ripartire da questi valori e registrare poi solo le giornate da quella data in poi.</span></label>'}
@@ -1195,7 +1205,9 @@ function impDo(){
   H.days.forEach(function(x){have[x.d]=1});
   H.days=H.days.filter(function(x){return x.d.slice(0,7)!==R.mk||keep});
   R.days.forEach(function(x){if(!(keep&&have[x.d]))H.days.push(x)});
-  var nx=nextK(R.mk),msg=[];H.sal=H.sal||{};
+  var pays=($('impPay')&&!$('impPay').checked)?[]:R.pays;
+  H.pay=(H.pay||[]).filter(function(x){return String(x.id||'').indexOf('imp-'+R.mk)!==0});pays.forEach(function(x){H.pay.push(x)});
+  var nx=nextK(R.mk),msg=[];H.sal=H.sal||{};if(pays.length)msg.push(pays.length+(pays.length===1?' liquidazione di banca ore registrata':' liquidazioni di banca ore registrate'));
   if($('impBo')&&$('impBo').checked&&S.bo!=null){var st0=S.bo-mSum(R.mk)+mDed(R.mk);H.res[R.mk]=(st0<0?'-':'')+f(Math.abs(st0));H.res[nx]=f(S.bo);msg.push('banca ore allineata: '+MESI[R.mi]+' parte da '+(st0<0?'−':'')+f(Math.abs(st0))+' e chiude a '+f(S.bo))}
   if($('impRes')&&$('impRes').checked&&S.pd){var pk=S.pd.slice(0,7),o=H.sal[pk]=H.sal[pk]||{};
     if(S.fe!=null)o.fe=String(S.fe);if(S.fp!=null)o.fp=String(S.fp);if(S.fs!=null)o.fs=String(S.fs);if(S.pe!=null)o.pe=f(S.pe);if(S.vs!=null)o.vs=f(S.vs);msg.push('saldi di partenza di '+MESI[+pk.slice(5)-1]+' impostati')}
@@ -1221,10 +1233,10 @@ function formVis(){var r=$('fTitle').getBoundingClientRect();if(r.top<60||r.top>
 function fFill(ds){
   var x=H.days.filter(function(y){return y.d===ds})[0];fClear();$('fD').value=ds;$('fN').value=noteOf(ds);
   if(!x){$('fTitle').textContent='Aggiungi giornata · '+dlab(ds);return}
-  $('fE').value=x.e||'';$('fX').value=x.x||'';$('fA').value=x.a||'';$('fO').value=x.o||'';$('fB').value=x.b||'';
+  $('fE').value=x.e||'';$('fX').value=x.x||'';$('fOt').value=x.ot?f(x.ot):'';$('fA').value=x.a||'';$('fO').value=x.o||'';$('fB').value=x.b||'';
   document.querySelector('input[name=fm][value='+(x.m||'in')+']').checked=true;$('fT').value=x.t||'p';$('fQ').value=x.q?f(x.q):'';$('fFull').checked=x.t==='pr'&&x.q===C().cdh;
   fPerm=(x.pm||[]).slice();ppDraw();applyT();$('fTitle').textContent='Modifica giornata · '+dlab(ds);$('fCancel').classList.remove('hide');editD=ds}
-function fClear(){edit=false;editD='';['fE','fX','fO','fB','fA'].forEach(function(i){$(i).value=''});$('fD').value=iso(new Date());document.querySelector('input[name=fm][value=in]').checked=true;$('fT').value='p';$('fN').value='';$('fQ').value='';$('fFull').checked=false;$('fPa').value='';$('fPb').value='';fPerm=[];$('ppA').value='';$('ppB').value='';$('ppQ').value='';ppDraw();applyT();$('fTitle').textContent='Aggiungi giornata';$('fCancel').classList.add('hide')}
+function fClear(){edit=false;editD='';['fE','fX','fO','fB','fA'].forEach(function(i){$(i).value=''});$('fD').value=iso(new Date());document.querySelector('input[name=fm][value=in]').checked=true;$('fT').value='p';$('fN').value='';$('fOt').value='';$('fQ').value='';$('fFull').checked=false;$('fPa').value='';$('fPb').value='';fPerm=[];$('ppA').value='';$('ppB').value='';$('ppQ').value='';ppDraw();applyT();$('fTitle').textContent='Aggiungi giornata';$('fCancel').classList.add('hide')}
 function addDay(o){H.days=H.days.filter(function(x){return x.d!==o.d});H.days.push(o);saveH();hm=o.d.slice(0,7)}
 function restore(txt,silent){
   try{var o=JSON.parse(txt),h=o.H||o;if(!h||!Array.isArray(h.days))throw 0;
@@ -1257,7 +1269,7 @@ function bindH(){
     var t=$('fT').value,q=0;if(t==='pe'||t==='vs'||t==='pr'||t==='bo'){q=p($('fQ').value)||0;if(!q){$('fMsg').innerHTML=box('bad','Inserisci le ore di permesso (h:mm).');return}}if(t==='p'&&!$('fE').value&&!$('fA').value){$('fMsg').innerHTML=box('bad','Inserisci almeno entrata e uscita (o una rettifica).');return}
     if(editD&&editD!==dt){H.days=H.days.filter(function(y){return y.d!==editD});if(H.notes)delete H.notes[editD]}
     setNote(dt,$('fN').value);sel=dt;
-    addDay(t==='p'?{d:dt,t:t,pm:fPerm.slice(),e:$('fE').value,x:$('fX').value,m:m,o:m==='out'?$('fO').value:'',b:m==='out'?$('fB').value:'',a:$('fA').value,n:''}:{d:dt,t:t,e:'',x:'',m:'in',o:'',b:'',a:$('fA').value,n:'',q:q});
+    addDay(t==='p'?{d:dt,t:t,pm:fPerm.slice(),e:$('fE').value,x:$('fX').value,m:m,o:m==='out'?$('fO').value:'',b:m==='out'?$('fB').value:'',a:$('fA').value,n:'',ot:p($('fOt').value)||0}:{d:dt,t:t,e:'',x:'',m:'in',o:'',b:'',a:$('fA').value,n:'',q:q});
     $('fMsg').innerHTML=box('ok','Giornata salvata.');fClear();renderH()});
   $('fCancel').addEventListener('click',function(){fClear();$('fMsg').innerHTML=''});
   $('fNote').addEventListener('click',function(){var dt=$('fD').value;if(!dt){$('fMsg').innerHTML=box('bad','Scegli la data.');return}setNote(dt,$('fN').value);saveH();sel=dt;hm=dt.slice(0,7);$('fMsg').innerHTML=box('ok',$('fN').value.trim()?'Nota salvata.':'Nota rimossa.');renderH()});
