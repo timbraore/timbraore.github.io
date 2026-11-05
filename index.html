@@ -432,6 +432,9 @@ table.stT th,table.stT td{padding:9px 10px}table.stT tr.tot td{border-top:2px so
   #tabG .colR #holCard{grid-column:2;grid-row:1/span 3}
 }
 @media (max-width:900px){#holCard{order:7}}
+.bars.lav .bt i.pos{background:var(--ac)}
+.bars .br{grid-template-columns:64px minmax(0,1fr) 100px}.bars.w .br{grid-template-columns:64px minmax(0,1fr) 190px}
+@media (max-width:700px){.bars .br,.bars.w .br{grid-template-columns:54px minmax(0,1fr) auto}}
 </style>
 </head>
 <body data-ovt="bank">
@@ -1097,6 +1100,7 @@ function otR(){
    '<ul class="kv"><li><span>Già liquidato nel mese</span><b>'+(paid?d(paid):'0')+'</b></li><li><span>Ancora da liquidare</span><b>'+d(Math.max(0,o-paid))+'</b></li></ul>'+
    box('info','Senza banca ore ogni mese è a sé: i minuti in più si pagano come straordinario e non si riporta nulla. I minuti in meno vanno recuperati: se il mese chiude in negativo, il mancante resta «da recuperare».');
 }
+function balAll(x){var r=(!x.t||x.t==='p')?dayCalc(x):null;return bal(x)+((r&&!r.abs&&cfg.ovt!=='ot')?(parseInt(x.ot,10)||0):0)}
 function statR(){
   var B=$('stBody');if(!B)return;
   var c=C(),ot=cfg.ovt==='ot',now=new Date(),y0=String(now.getFullYear()),yrs={};
@@ -1111,8 +1115,8 @@ function statR(){
   var P=D.filter(function(x){return (!x.t||x.t==='p')&&p(x.e)!=null&&p(x.x)!=null&&p(x.x)>=p(x.e)&&!isAbs(x)});
   function avg(a){return a.length?a.reduce(function(t,v){return t+v},0)/a.length:0}
   function mn(a){return Math.min.apply(null,a)}function mx(a){return Math.max.apply(null,a)}
-  var E=P.map(function(x){return p(x.e)}),X=P.map(function(x){return p(x.x)}),G=P.map(function(x,i){return X[i]-Math.max(E[i],c.min)}),BA=P.map(bal);
-  var months={};D.forEach(function(x){var k=x.d.slice(0,7);months[k]=(months[k]||0)+bal(x)});
+  var E=P.map(function(x){return p(x.e)}),X=P.map(function(x){return p(x.x)}),G=P.map(function(x,i){return X[i]-Math.max(E[i],c.min)}),BA=P.map(balAll);
+  var months={};D.forEach(function(x){var k=x.d.slice(0,7);months[k]=(months[k]||0)+balAll(x)});
   var mk=Object.keys(months).sort(),ms=mk.map(function(k){return months[k]}),otM=ms.map(function(v){return Math.max(0,v)});
   function tile(l,v,sub,cl){return '<div class="stat'+(cl?' '+cl:'')+'"><small>'+l+'</small><b>'+v+'</b><span>'+(sub||'&nbsp;')+'</span></div>'}
   var n=P.length,none='servono giornate con entrata e uscita',T='';
@@ -1129,18 +1133,20 @@ function statR(){
   T+=tile('Pause oltre '+c.brk+' minuti',n?Math.round(ovN/n*100)+'%':'–',n?ovN+(ovN===1?' giornata':' giornate')+' su '+n:none,ovN?'warn':'');
   T+=tile('Minuti di superamento',n?d(ovT):'–',n?(ovN?'in media '+Math.round(ovT/ovN)+' min per volta':'nessun superamento'):none,ovT?'warn':'');
   var otS=ot?0:D.reduce(function(t,x){return t+(parseInt(x.ot,10)||0)},0);if(otS)T+=tile('Straordinario pagato',d(otS),'fuori dalla banca ore');
-  var W=['Lun','Mar','Mer','Gio','Ven'].map(function(l,i){var a=P.filter(function(x){return (new Date(x.d+'T12:00').getDay()+6)%7===i}).map(bal);return {l:l,n:a.length,v:avg(a)}});
+  var W=['Lun','Mar','Mer','Gio','Ven'].map(function(l,i){var a=P.filter(function(x){return (new Date(x.d+'T12:00').getDay()+6)%7===i}).map(balAll);return {l:l,n:a.length,v:avg(a)}});
   var MI=mk.map(function(k,i){return {l:new Date(k+'-01T12:00').toLocaleDateString('it-IT',{month:'short',year:'2-digit'}),n:1,v:ms[i]}});
-  function bars(items,fmt,w){var m=Math.max.apply(null,items.map(function(i){return Math.abs(i.v)}).concat([1]));
-    return '<div class="bars'+(w?' w':'')+'">'+items.map(function(i){return '<div class="br"><span class="bl">'+i.l+'</span><span class="bt"><i class="'+(i.v<0?'neg':'pos')+'" style="width:'+(i.n&&i.v?Math.max(3,Math.round(Math.abs(i.v)/m*100)):0)+'%"></i></span><b>'+fmt(i)+'</b></div>'}).join('')+'</div>'}
+  function bars(items,fmt,w,cl){var m=Math.max.apply(null,items.map(function(i){return Math.abs(i.v)}).concat([1]));
+    return '<div class="bars'+(w?' w':'')+(cl?' '+cl:'')+'">'+items.map(function(i){return '<div class="br"><span class="bl">'+i.l+'</span><span class="bt"><i class="'+(i.v<0?'neg':'pos')+'" style="width:'+(i.n&&i.v?Math.max(3,Math.round(Math.abs(i.v)/m*100)):0)+'%"></i></span><b>'+fmt(i)+'</b></div>'}).join('')+'</div>'}
   var cnt={};D.forEach(function(x){var k=x.t||'p';cnt[k]=(cnt[k]||0)+1});
   var nAbs=D.filter(function(x){return (!x.t||x.t==='p')&&isAbs(x)}).length;
   var WD=['Lun','Mar','Mer','Gio','Ven'].map(function(l,i){var ix=[];P.forEach(function(x,k){if((new Date(x.d+'T12:00').getDay()+6)%7===i)ix.push(k)});
     return {l:l,n:ix.length,e:avg(ix.map(function(k){return E[k]})),x:avg(ix.map(function(k){return X[k]})),g:avg(ix.map(function(k){return G[k]})),b:avg(ix.map(function(k){return BA[k]}))}});
   function trow(r,tot){return '<tr'+(tot?' class="tot"':'')+'><td><b>'+r.l+'</b></td><td>'+(r.n?f(Math.round(r.e)):'–')+'</td><td>'+(r.n?f(Math.round(r.x)):'–')+'</td><td>'+(r.n?d(Math.round(r.g)):'–')+'</td><td class="'+(r.n&&r.b<0?'neg':'pos')+'">'+(r.n?sg(Math.round(r.b)):'–')+'</td><td>'+r.n+'</td></tr>'}
   var tbl='<h3 style="margin-top:26px">Entrata e uscita media per giorno della settimana</h3><div style="overflow-x:auto"><table class="stT"><tr><th>Giorno</th><th>Entrata media</th><th>Uscita media</th><th>Permanenza media</th><th>Saldo medio</th><th>Giornate</th></tr>'+WD.map(function(r){return trow(r)}).join('')+trow({l:'Tutti i giorni',n:n,e:avg(E),x:avg(X),g:avg(G),b:avg(BA)},1)+'</table></div>';
-  B.innerHTML='<div class="stGrid">'+T+'</div><div class="stCols"><div><h3>Saldo medio per giorno della settimana</h3>'+bars(W,function(i){return i.n?sg(Math.round(i.v)):'–'})+'</div>'+
-   '<div><h3>'+(ot?'Straordinario mese per mese':'Saldo mese per mese')+'</h3>'+bars(MI,function(i){return ot?(i.v>=0?d(i.v)+' · ≈ '+eur(i.v/60*c.rate):'da recuperare '+d(-i.v)):sg(Math.round(i.v))},1)+'</div></div>'+
+  var LAw=['Lun','Mar','Mer','Gio','Ven'].map(function(l,i){return {l:l,n:1,v:D.filter(function(x){return x.t==='la'&&(new Date(x.d+'T12:00').getDay()+6)%7===i}).length}}),laTot=LAw.reduce(function(t,x){return t+x.v},0);
+  var laChart=laTot?bars(LAw,function(i){return i.v?i.v+' gg · '+Math.round(i.v/laTot*100)+'%':'–'},0,'lav')+'<p class="sub" style="margin:10px 0 0;font-size:.85rem">In tutto '+laTot+(laTot===1?' giornata':' giornate')+' di lavoro agile nel periodo scelto.</p>':'<p class="sub">Nel periodo scelto non ci sono giornate di lavoro agile.</p>';
+  B.innerHTML='<div class="stGrid">'+T+'</div><div class="stCols"><div><h3>Saldo medio per giorno della settimana</h3><p class="sub" style="margin:-6px 0 10px;font-size:.85rem">Conta tutto il tempo oltre '+d(c.work+c.brk)+', anche quello pagato come straordinario.</p>'+bars(W,function(i){return i.n?sg(Math.round(i.v)):'–'})+'<h3 style="margin-top:26px">Lavoro agile per giorno della settimana</h3>'+laChart+'</div>'+
+   '<div><h3>'+(ot?'Straordinario mese per mese':'Saldo mese per mese')+'</h3>'+bars(MI,function(i){return ot?(i.v>=0?d(i.v)+' · ≈ '+eur(i.v/60*c.rate):'da recuperare '+d(-i.v)):sg(Math.round(i.v))},1)+(otS?'<p class="sub" style="margin:10px 0 0;font-size:.85rem">Nei saldi è compreso lo straordinario pagato: <b>'+d(otS)+'</b>.</p>':'')+'</div></div>'+
    tbl+'<h3 style="margin-top:26px">Giornate per tipo</h3><div class="chips2">'+Object.keys(cnt).map(function(k){return '<span>'+(ICO[k]||'')+' '+(TY[k]||'Altro')+' <b>'+cnt[k]+'</b></span>'}).join('')+(nAbs?'<span>⚠️ Sotto la presenza minima <b>'+nAbs+'</b></span>':'')+'</div>'+
    '<p class="sub" style="margin:18px 0 0;font-size:.85rem">Contano solo i giorni fino a oggi; le medie solo le giornate di presenza con entrata e uscita inserite. Il superamento della pausa si calcola solo dove hai segnato «Esco» con gli orari di uscita e rientro.</p>';
 }
